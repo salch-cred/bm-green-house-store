@@ -4,19 +4,19 @@ export async function POST(req: Request) {
   try {
     const { message } = await req.json();
     
-    const apiKey = process.env.NVIDIA_API_KEY;
+    const apiKey = process.env.MISTRAL_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "NVIDIA API key not configured." }, { status: 500 });
+      return NextResponse.json({ error: "Mistral API key not configured." }, { status: 500 });
     }
 
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "meta/llama-3.1-8b-instruct",
+        model: "mistral-small-latest",
         messages: [
           {
             role: "system",
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "Failed to fetch AI response");
+    if (!response.ok) throw new Error(data.message || data.detail || "Failed to fetch AI response");
 
     return NextResponse.json({ reply: data.choices[0].message.content });
   } catch (error: any) {
