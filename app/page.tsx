@@ -191,25 +191,23 @@ export default function Home() {
               >
                 <Leaf size={64} weight="duotone" />
               </motion.div>
-              {/* Floating Badge 1 */}
+              {/* Minimalist Indicators */}
               <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute top-1/4 -right-8 bg-white/90 backdrop-blur-md border border-[var(--border)] px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-20"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-1/4 -right-4 md:-right-12 flex items-center gap-3 z-20"
               >
-                <span className="text-xl">✨</span>
-                <span className="font-bold text-xs sm:text-sm text-[#212529]">100% Organic</span>
+                <div className="w-8 h-[1px] bg-[var(--foreground)] hidden md:block opacity-20" />
+                <span className="font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] text-[var(--foreground)] opacity-60">100% Organic</span>
               </motion.div>
-              {/* Floating Badge 2 */}
+              
               <motion.div 
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="absolute bottom-1/4 -left-8 bg-white/90 backdrop-blur-md border border-[var(--border)] px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-20"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                className="absolute bottom-1/4 -left-4 md:-left-12 flex items-center gap-3 z-20 flex-row-reverse"
               >
-                <div className="bg-blue-100 p-1 rounded-full text-blue-500">
-                  <Drop size={16} weight="fill" />
-                </div>
-                <span className="font-bold text-xs sm:text-sm text-[#212529]">Zero Sugar</span>
+                <div className="w-8 h-[1px] bg-[var(--foreground)] hidden md:block opacity-20" />
+                <span className="font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] text-[var(--foreground)] opacity-60">Zero Sugar</span>
               </motion.div>
               
               <div 
