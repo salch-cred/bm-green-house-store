@@ -6,19 +6,13 @@ export async function POST(req: Request) {
   try {
     const { message } = await req.json();
     
-    const apiKey = process.env.NVIDIA_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "NVIDIA API key not configured." }, { status: 500 });
-    }
-
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+    const response = await fetch("https://text.pollinations.ai/openai", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "nvidia/llama-3.1-nemotron-70b-instruct",
+        model: "llama",
         messages: [
           {
             role: "system",
