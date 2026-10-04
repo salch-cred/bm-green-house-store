@@ -52,7 +52,7 @@ export default function Home() {
     if (!container) return;
     let index = 0;
     const interval = setInterval(() => {
-      index = (index + 1) % 3;
+      index = (index + 1) % 2;
       container.scrollTo({
         left: index * container.clientWidth,
         behavior: 'smooth'
@@ -190,7 +190,7 @@ export default function Home() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
-                {["/product-pack.png", "/product-2.png", "/product-3.png"].map((img, i) => (
+                {["/product-pack.png", "/product-2.png"].map((img, i) => (
                   <div key={i} className="min-w-full h-full relative snap-center flex-shrink-0 hide-scroll flex items-center justify-center p-4">
                     <motion.div 
                       animate={{ y: [0, -15, 0] }}
@@ -215,7 +215,6 @@ export default function Home() {
         {/* Pagination Dots */}
         <div className="flex justify-center gap-3 mt-12 relative z-10">
           <div className="w-8 h-2 rounded-full bg-[var(--accent)]" />
-          <div className="w-2 h-2 rounded-full bg-[var(--border)]" />
           <div className="w-2 h-2 rounded-full bg-[var(--border)]" />
         </div>
       </section>

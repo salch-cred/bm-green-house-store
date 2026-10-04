@@ -23,6 +23,7 @@ export default function Admin() {
   // Blog state
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [newBlog, setNewBlog] = useState<Partial<BlogPost>>({ mediaType: "none" });
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,22 +42,27 @@ export default function Admin() {
     setTimeout(() => setSaved(false), 2200);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Determine type
     const isVideo = file.type.startsWith("video/");
     setNewBlog(prev => ({ ...prev, mediaType: isVideo ? "video" : "image" }));
+    setIsUploading(true);
     
-    // Convert to base64 for localstorage demo
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if(event.target?.result) {
-        setNewBlog(prev => ({ ...prev, mediaUrl: event.target!.result as string }));
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file,
+      });
+      const newBlob = await response.json();
+      setNewBlog(prev => ({ ...prev, mediaUrl: newBlob.url }));
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Failed to upload file to Vercel Blob.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const saveBlog = (e: React.FormEvent) => {
@@ -257,10 +263,10 @@ export default function Admin() {
                 <div className="block">
                   <span className="block text-sm font-bold text-[var(--muted)] mb-2">Media Upload (Photo/Video)</span>
                   <div className="relative">
-                    <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    <div className="flex items-center gap-3 w-full bg-[var(--surface-hover)] border border-dashed border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface)] rounded-xl px-4 py-4 font-medium transition-colors text-[var(--muted)]">
+                    <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={isUploading} />
+                    <div className={`flex items-center gap-3 w-full bg-[var(--surface-hover)] border border-dashed border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface)] rounded-xl px-4 py-4 font-medium transition-colors text-[var(--muted)] ${isUploading ? "animate-pulse" : ""}`}>
                       <ImageIcon size={24} /> <Video size={24} />
-                      <span className="text-sm">Click or drag file to upload media</span>
+                      <span className="text-sm">{isUploading ? "Uploading to Vercel Blob..." : "Click or drag file to upload media"}</span>
                     </div>
                   </div>
                   
