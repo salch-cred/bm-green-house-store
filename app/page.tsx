@@ -151,9 +151,13 @@ export default function Home() {
               </p>
             </FadeUp>
             <FadeUp delay={0.2}>
-              <button onClick={() => setCartOpen(true)} className="btn-primary px-10 py-4 rounded-full text-lg shadow-lg">
-                Buy Now — ₹{config.price}
-              </button>
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-[var(--accent)] blur-xl opacity-40 animate-pulse rounded-full" />
+                <button onClick={() => setCartOpen(true)} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300">
+                  <span>Buy Now — ₹{config.price}</span>
+                  <ArrowRight size={20} weight="bold" />
+                </button>
+              </div>
             </FadeUp>
           </div>
           <div className="flex-1 relative aspect-square w-full max-w-[500px]">
@@ -174,7 +178,7 @@ export default function Home() {
               >
                 <Leaf size={64} weight="duotone" />
               </motion.div>
-              {/* Floating Badge */}
+              {/* Floating Badge 1 */}
               <motion.div 
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
@@ -182,6 +186,17 @@ export default function Home() {
               >
                 <span className="text-xl">✨</span>
                 <span className="font-bold text-xs sm:text-sm text-[#212529]">100% Organic</span>
+              </motion.div>
+              {/* Floating Badge 2 */}
+              <motion.div 
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute bottom-1/4 -left-8 bg-white/90 backdrop-blur-md border border-[var(--border)] px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-20"
+              >
+                <div className="bg-blue-100 p-1 rounded-full text-blue-500">
+                  <Drop size={16} weight="fill" />
+                </div>
+                <span className="font-bold text-xs sm:text-sm text-[#212529]">Zero Sugar</span>
               </motion.div>
               
               <div 
