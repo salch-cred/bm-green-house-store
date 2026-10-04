@@ -290,10 +290,7 @@ export default function Home() {
       {/* Product Video 1 */}
       <section className="py-12 px-6 relative z-10">
         <div className="container mx-auto max-w-[1000px]">
-          <FadeUp className="rounded-3xl overflow-hidden border border-[var(--border)] shadow-sm bg-[var(--surface-hover)] aspect-video relative group">
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 group-hover:bg-black/0 transition-colors pointer-events-none">
-              <span className="bg-white/90 backdrop-blur-sm text-black px-4 py-2 rounded-full font-bold text-sm shadow-lg">Product Video 1</span>
-            </div>
+          <FadeUp className="rounded-3xl overflow-hidden border border-[var(--border)] shadow-sm bg-[var(--surface-hover)] aspect-video relative">
             <video src="/product-video-1.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
           </FadeUp>
         </div>
@@ -314,15 +311,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Video 2 */}
-      <section className="py-12 px-6 relative z-10">
+      {/* Product Video 2 (Reel Style) */}
+      <section className="py-16 px-6 relative z-10 overflow-hidden">
         <div className="container mx-auto max-w-[1000px]">
-          <FadeUp className="rounded-3xl overflow-hidden border border-[var(--border)] shadow-sm bg-[var(--surface-hover)] aspect-video relative group">
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 group-hover:bg-black/0 transition-colors pointer-events-none">
-              <span className="bg-white/90 backdrop-blur-sm text-black px-4 py-2 rounded-full font-bold text-sm shadow-lg">Product Video 2</span>
-            </div>
-            <video src="/product-video-2.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
-          </FadeUp>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Description Side */}
+            <FadeUp className="order-2 md:order-1 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-4 text-[var(--accent)] font-bold tracking-widest uppercase text-xs">
+                <Leaf size={16} weight="duotone" />
+                <span>The BM Green House Story</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-extrabold mb-6 leading-tight text-[var(--foreground)]">
+                Brewed to <br />
+                <span className="italic text-[var(--muted)] font-serif">Perfection.</span>
+              </h2>
+              <p className="text-[var(--muted)] text-lg leading-relaxed mb-8">
+                Watch how our finely roasted date seeds transform into a rich, full-bodied beverage that comforts the soul. Every cup promises a completely caffeine-free, natural energy boost that you can enjoy at any time of the day.
+              </p>
+              
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4 bg-[var(--surface-hover)] p-4 rounded-2xl border border-[var(--border)]">
+                  <div className="w-12 h-12 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--accent)] shrink-0">
+                    <ShieldCheck size={24} weight="duotone" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[var(--foreground)]">100% Pure</h4>
+                    <p className="text-sm text-[var(--muted)]">No additives or artificial colors.</p>
+                  </div>
+                </div>
+              </div>
+            </FadeUp>
+            
+            {/* Video Side */}
+            <FadeUp delay={0.2} className="order-1 md:order-2 flex justify-center md:justify-end">
+              <div className="w-full max-w-[320px] rounded-[2rem] overflow-hidden border-[6px] border-[var(--surface-hover)] shadow-2xl relative aspect-[9/16] bg-black">
+                <video src="/product-video-2.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
+              </div>
+            </FadeUp>
+          </div>
         </div>
       </section>
 
