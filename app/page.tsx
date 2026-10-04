@@ -40,6 +40,35 @@ const FadeUp = ({ children, delay = 0, className = "" }: { children: React.React
   </motion.div>
 );
 
+const LazyVideo = ({ src, className }: { src: string, className?: string }) => {
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" } // load before it comes into view
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`relative w-full h-full ${className || ''}`}>
+      {inView ? (
+        <video src={src} className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
+      ) : (
+        <div className="absolute inset-0 bg-[var(--surface)] animate-pulse" />
+      )}
+    </div>
+  );
+};
+
 export default function Home() {
   const [config, setConfig] = useState(defaultConfig);
   const [cartOpen, setCartOpen] = useState(false);
@@ -342,7 +371,7 @@ export default function Home() {
             
             <FadeUp delay={0.2} className="flex-1 w-full">
               <div className="rounded-[2rem] overflow-hidden border-[8px] border-white shadow-2xl bg-[var(--surface-hover)] aspect-video relative group transform md:rotate-2 hover:rotate-0 transition-all duration-500">
-                <video src="/product-video-1.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
+                <LazyVideo src="/product-video-1.mp4" />
               </div>
             </FadeUp>
           </div>
@@ -398,7 +427,7 @@ export default function Home() {
             {/* Video Side */}
             <FadeUp delay={0.2} className="order-1 md:order-2 flex justify-center md:justify-end">
               <div className="w-full max-w-[320px] rounded-[2rem] overflow-hidden border-[6px] border-[var(--surface-hover)] shadow-2xl relative aspect-[9/16] bg-black">
-                <video src="/product-video-2.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
+                <LazyVideo src="/product-video-2.mp4" />
               </div>
             </FadeUp>
           </div>
