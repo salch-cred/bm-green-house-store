@@ -191,14 +191,20 @@ export default function Home() {
               >
                 <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
                 {["/product-pack.png", "/product-2.png", "/product-3.png"].map((img, i) => (
-                  <div key={i} className="min-w-full h-full relative snap-center flex-shrink-0 hide-scroll">
-                    <Image 
-                      src={img} 
-                      alt={`Product Image ${i + 1}`} 
-                      fill
-                      className="object-contain hover:scale-105 transition-transform duration-[1s]" 
-                      priority={i === 0}
-                    />
+                  <div key={i} className="min-w-full h-full relative snap-center flex-shrink-0 hide-scroll flex items-center justify-center p-4">
+                    <motion.div 
+                      animate={{ y: [0, -15, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                      className="w-full h-full relative"
+                    >
+                      <Image 
+                        src={img} 
+                        alt={`Product Image ${i + 1}`} 
+                        fill
+                        className="object-contain drop-shadow-[0_25px_25px_rgba(62,90,59,0.35)] hover:scale-110 transition-transform duration-[1s]" 
+                        priority={i === 0}
+                      />
+                    </motion.div>
                   </div>
                 ))}
               </div>
@@ -384,7 +390,7 @@ export default function Home() {
 
             <div className="flex gap-4 mb-8 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
               <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
-                <Image src="/product-pack.png" alt="Product" fill className="object-contain p-2" />
+                <Image src="/product-pack.png" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
               </div>
               <div className="flex flex-col justify-center">
                 <h3 className="font-bold text-[#212529] mb-1">{config.name}</h3>
