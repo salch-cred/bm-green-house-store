@@ -8,7 +8,7 @@ import {
   ShoppingCart, ArrowRight, CaretDown, Check,
   Leaf, ShieldCheck, Lightning, Fire,
   Coffee, Drop, CheckCircle, Package,
-  Star, Article, Info, Sparkle, X,
+  Star, Article, Info, Sparkle, X, User,
   FacebookLogo, TwitterLogo, YoutubeLogo, InstagramLogo, LinkedinLogo
 } from "@phosphor-icons/react";
 
@@ -565,7 +565,7 @@ export default function Home() {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-4 items-start ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-sm font-bold ${msg.role === "user" ? "bg-[var(--foreground)] text-[var(--surface)]" : "bg-[var(--accent)] text-white"}`}>
-                    {msg.role === "user" ? "U" : <Leaf size={20} weight="fill" />}
+                    {msg.role === "user" ? <User size={20} weight="fill" /> : <Leaf size={20} weight="fill" />}
                   </div>
                   <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === "user" ? "bg-[var(--surface-hover)] border border-[var(--border)] rounded-tr-sm text-[var(--foreground)]" : "bg-[var(--accent)] rounded-tl-sm text-white"}`}>
                     {msg.content.split('\n').map((line, j) => (

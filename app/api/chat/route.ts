@@ -18,7 +18,7 @@ export async function POST(req: Request) {
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "meta/llama3-8b-instruct",
+        model: "nvidia/llama-3.1-nemotron-70b-instruct",
         messages: [
           {
             role: "system",
