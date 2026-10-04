@@ -302,11 +302,39 @@ export default function Home() {
       </section>
 
       {/* Product Video 1 */}
-      <section className="py-12 px-6 relative z-10">
-        <div className="container mx-auto max-w-[1000px]">
-          <FadeUp className="rounded-3xl overflow-hidden border border-[var(--border)] shadow-sm bg-[var(--surface-hover)] aspect-video relative">
-            <video src="/product-video-1.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
-          </FadeUp>
+      <section className="py-20 px-6 relative z-10 overflow-hidden">
+        {/* Background glow for decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[var(--accent)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+        
+        <div className="container mx-auto max-w-[1100px]">
+          <div className="flex flex-col md:flex-row gap-12 items-center">
+            <FadeUp className="flex-1 w-full">
+              <div className="flex items-center gap-2 mb-4 text-[var(--accent)] font-bold tracking-widest uppercase text-xs">
+                <Sparkle size={16} weight="duotone" />
+                <span>Premium Quality</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-[var(--foreground)] leading-tight">
+                Experience the <br className="hidden md:block"/> Roasting Process
+              </h2>
+              <p className="text-[var(--muted)] text-lg leading-relaxed mb-8">
+                From the finest hand-picked dates to your morning cup, we ensure every step of our automated processing preserves the deep, earthy flavor and natural minerals. No shortcuts, just pure dedication.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#212529] bg-white px-4 py-2 rounded-full border border-[var(--border)] shadow-sm">
+                  <CheckCircle size={18} weight="fill" className="text-[var(--accent)]" /> Carefully Sorted
+                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-[#212529] bg-white px-4 py-2 rounded-full border border-[var(--border)] shadow-sm">
+                  <CheckCircle size={18} weight="fill" className="text-[var(--accent)]" /> Perfect Roast
+                </div>
+              </div>
+            </FadeUp>
+            
+            <FadeUp delay={0.2} className="flex-1 w-full">
+              <div className="rounded-[2rem] overflow-hidden border-[8px] border-white shadow-2xl bg-[var(--surface-hover)] aspect-video relative group transform md:rotate-2 hover:rotate-0 transition-all duration-500">
+                <video src="/product-video-1.mp4" className="w-full h-full object-cover" autoPlay loop muted playsInline controls />
+              </div>
+            </FadeUp>
+          </div>
         </div>
       </section>
 
