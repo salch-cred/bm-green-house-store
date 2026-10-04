@@ -415,7 +415,7 @@ export default function Home() {
 
             <div className="flex gap-4 mb-8 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
               <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
-                <Image src="/product-png1.png" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
+                <Image src="/product-png2.png" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
               </div>
               <div className="flex flex-col justify-center">
                 <h3 className="font-bold text-[#212529] mb-1">{config.name}</h3>

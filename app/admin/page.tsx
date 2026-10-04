@@ -220,7 +220,7 @@ export default function Admin() {
                 <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider block mb-6">LIVE PREVIEW</span>
                 <div className="bg-[var(--surface-hover)] rounded-2xl p-4 flex flex-col items-center text-center border border-[var(--border)] relative overflow-hidden">
                   <div className="absolute top-3 right-3 bg-[var(--accent)] text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm"><span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse"></span> LIVE</div>
-                  <Image src="/product-png1.png" alt="Product" width={140} height={220} className="drop-shadow-xl my-4 hover:scale-105 transition-transform duration-500" />
+                  <Image src="/product-png2.png" alt="Product" width={140} height={220} className="drop-shadow-xl my-4 hover:scale-105 transition-transform duration-500" />
                   <h3 className="font-extrabold text-lg mt-2">{config.name}</h3>
                   <p className="text-[var(--muted)] text-xs font-medium mt-1 mb-3 line-clamp-2">{config.subtitle}</p>
                   <div className="flex items-center gap-2 mb-2">
