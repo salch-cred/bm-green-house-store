@@ -25,6 +25,10 @@ export default function Admin() {
   const [newBlog, setNewBlog] = useState<Partial<BlogPost>>({ mediaType: "none" });
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
 
   useEffect(() => {
     const x = localStorage.getItem("bm-store-config");
@@ -95,6 +99,34 @@ export default function Admin() {
     setBlogs(updated);
     localStorage.setItem("bm-store-blogs", JSON.stringify(updated));
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+        <div className="bg-[var(--surface)] p-8 rounded-3xl shadow-sm border border-[var(--border)] max-w-sm w-full text-center">
+          <Image src="/bm-logo.png" alt="Logo" width={64} height={64} className="mx-auto mb-6 rounded-xl shadow-sm" />
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-6">Admin Access</h1>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const correctPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "suhail123";
+            if (passwordInput === correctPass) setIsAuthenticated(true);
+            else alert("Incorrect password");
+          }}>
+            <input 
+              type="password" 
+              value={passwordInput} 
+              onChange={e => setPasswordInput(e.target.value)} 
+              placeholder="Enter password" 
+              className="w-full bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-4 py-3 font-medium outline-none focus:border-[var(--accent)] transition-colors mb-4 text-center"
+            />
+            <button type="submit" className="w-full bg-[var(--accent)] text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--background)] flex flex-col md:flex-row text-[var(--foreground)]">

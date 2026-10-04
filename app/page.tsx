@@ -79,13 +79,26 @@ export default function Home() {
     setChatInput("");
     setIsTyping(true);
     
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg.content })
+      });
+      const data = await res.json();
+      
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: "This is a simulated response. Once you plug in your NVIDIA API key in the `handleSendMessage` function, I will be able to generate real answers!"
+        content: data.reply || data.error || "Sorry, I couldn't process that request."
       }]);
-      setIsTyping(false);
-    }, 1500);
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "Error connecting to AI."
+      }]);
+    }
+    
+    setIsTyping(false);
   };
 
   const subtotal = config.price * quantity;
@@ -404,10 +417,13 @@ export default function Home() {
               <Leaf size={16} weight="fill" className="text-[var(--accent)] animate-pulse" />
             </span>
           </div>
-          <div className="flex gap-6 text-sm font-medium text-[var(--muted)]">
-            <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[var(--accent)] transition-colors">Terms of Service</Link>
-            <Link href="/shipping" className="hover:text-[var(--accent)] transition-colors">Shipping & Returns</Link>
+          <div className="flex items-center gap-6 text-sm font-medium text-[var(--muted)]">
+            <Link href="https://instagram.com/bmgreenhouse" target="_blank" className="flex items-center gap-2 hover:text-[var(--accent)] transition-colors">
+              <InstagramLogo size={20} /> @bmgreenhouse
+            </Link>
+            <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors hidden md:block">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-[var(--accent)] transition-colors hidden md:block">Terms of Service</Link>
+            <Link href="/shipping" className="hover:text-[var(--accent)] transition-colors hidden md:block">Shipping</Link>
           </div>
         </div>
       </footer>
