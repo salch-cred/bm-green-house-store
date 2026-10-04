@@ -190,7 +190,7 @@ export default function Home() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
-                {["/product-pack.png", "/product-2.png"].map((img, i) => (
+                {["/product-png1.jpeg", "/product-png2.jpeg"].map((img, i) => (
                   <div key={i} className="min-w-full h-full relative snap-center flex-shrink-0 hide-scroll flex items-center justify-center p-4">
                     <motion.div 
                       animate={{ y: [0, -15, 0] }}
@@ -415,7 +415,7 @@ export default function Home() {
 
             <div className="flex gap-4 mb-8 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
               <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
-                <Image src="/product-pack.png" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
+                <Image src="/product-png1.jpeg" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
               </div>
               <div className="flex flex-col justify-center">
                 <h3 className="font-bold text-[#212529] mb-1">{config.name}</h3>
