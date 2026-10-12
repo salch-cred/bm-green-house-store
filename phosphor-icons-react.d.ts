@@ -26,6 +26,7 @@ declare module "@phosphor-icons/react" {
     IconProps & RefAttributes<SVGSVGElement>
   >;
   export const Package: Icon;
+  export const ShoppingCart: Icon;
   export const Article: Icon;
   export const CheckCircle: Icon;
   export const Image: Icon;

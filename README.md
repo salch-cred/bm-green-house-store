@@ -12,9 +12,10 @@ npm run dev
 ```
 
 Open `http://localhost:3000`. Admin console is at `/admin` (tabs: Dashboard,
-Storefront, Blogs, Reviews, Orders, Media, Settings, Procedure) and persists
+Products, Storefront, Blogs, Reviews, Orders, Media, Settings, Procedure) and persists
 in the current browser for this demo — see `ADMIN_GUIDE.md` for the full
-working procedure.
+working procedure. Yes — admin edits (products, prices, stock, blogs, content)
+show on the shopper pages instantly in the same browser.
 
 ## Deploy to Vercel
 

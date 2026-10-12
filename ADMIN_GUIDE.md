@@ -14,7 +14,16 @@ Health at a glance: Live status, stock vs low-stock threshold, discount %,
 logged revenue, new orders, blog/review counts. Red banner = low stock or
 offline store.
 
-## 3. Storefront tab
+## 3. Products tab (add as many as you like)
+- **Add product**: name, variant/subtitle, price, compare price, stock, photo
+  (upload to Vercel Blob or paste URL), badge/tag, description, visible toggle.
+- It appears in the homepage **shop (`#products`)** instantly, with discount %,
+  stock state, and Add to Basket.
+- The **first product = featured**: drives the hero **Buy Now** button. Use
+  **Set featured** to reorder, **Hide** to unlist without deleting.
+- Old single-product data auto-migrates into the catalog on first load.
+
+## 4. Storefront tab
 Everything the homepage reads from `localStorage (bm-store-config)`:
 - **Product**: name, subtitle, price, compare price, stock, low-stock threshold,
   `isLive` toggle (disables Buy Now when offline), delivery note.

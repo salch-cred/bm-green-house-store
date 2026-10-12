@@ -14,9 +14,9 @@ import {
 
 const ANIMATION_EASING = [0.32, 0.72, 0, 1] as any;
 
-import { defaultConfig as _defaultConfig } from "./lib/store";
-import type { StoreConfig } from "./lib/store";
-import { KEYS, loadJSON } from "./lib/store";
+import { defaultConfig as _defaultConfig, defaultProducts } from "./lib/store";
+import type { StoreConfig, Product, CartLine, Order } from "./lib/store";
+import { KEYS, loadJSON, loadProducts, cartCount, cartTotal, productDiscount } from "./lib/store";
 
 // Re-exported for backward compat (admin + old imports).
 export type { StoreConfig } from "./lib/store";
@@ -65,22 +65,58 @@ const LazyVideo = ({ src, className }: { src: string, className?: string }) => {
 
 export default function Home() {
   const [config, setConfig] = useState(_defaultConfig);
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [cartOpen, setCartOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState<CartLine[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load admin-saved storefront config (fixes old bug where admin edits never showed).
+  // Load admin-saved storefront config + product catalog (admin edits show here).
   useEffect(() => {
     setConfig(loadJSON(KEYS.config, _defaultConfig));
+    setProducts(loadProducts());
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEYS.config && e.newValue) {
         try { setConfig({ ..._defaultConfig, ...JSON.parse(e.newValue) }); } catch {}
+      }
+      if (e.key === KEYS.products && e.newValue) {
+        try {
+          const list = JSON.parse(e.newValue);
+          if (Array.isArray(list)) setProducts(list);
+        } catch {}
       }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const liveProducts = products.filter((p) => p.isLive);
+  const featured = liveProducts.find((p) => p.stock > 0) ?? liveProducts[0] ?? products[0];
+  const units = cartCount(cart);
+  const subtotal = cartTotal(cart, products);
+
+  const addToCart = (id: string, qty = 1) => {
+    const p = products.find((x) => x.id === id);
+    if (!p || !p.isLive || p.stock <= 0) return;
+    setCart((prev) => {
+      const line = prev.find((l) => l.id === id);
+      const cur = line ? line.qty : 0;
+      const next = Math.min(cur + qty, p.stock);
+      if (next <= 0) return prev;
+      if (line) return prev.map((l) => (l.id === id ? { ...l, qty: next } : l));
+      return [...prev, { id, qty: next }];
+    });
+  };
+
+  const setLineQty = (id: string, qty: number) => {
+    const p = products.find((x) => x.id === id);
+    const max = p ? Math.max(p.stock, 1) : 99;
+    setCart((prev) =>
+      qty <= 0
+        ? prev.filter((l) => l.id !== id)
+        : prev.map((l) => (l.id === id ? { ...l, qty: Math.min(qty, max) } : l))
+    );
+  };
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -136,23 +172,38 @@ export default function Home() {
     setIsTyping(false);
   };
 
-  const subtotal = config.price * quantity;
-
   const handleOrder = () => {
+    if (cart.length === 0) return;
+    const lines = cart.map((l) => {
+      const p = products.find((x) => x.id === l.id);
+      return p ? `- ${p.name} (${p.subtitle}) x${l.qty} — ₹${p.price * l.qty}` : null;
+    }).filter(Boolean);
     // Log order locally so Admin → Orders tab can fulfil it.
     try {
-      const prev = loadJSON<any[]>(KEYS.orders, []);
+      const prev = loadJSON<Order[]>(KEYS.orders, []);
       prev.unshift({
         id: Date.now().toString(),
-        qty: quantity,
+        qty: units,
         total: subtotal,
         date: new Date().toLocaleString(),
         status: "new",
-        note: `${config.name} (${config.subtitle})`,
+        note: `${lines.length} item(s)`,
+        items: cart.map((l) => {
+          const p = products.find((x) => x.id === l.id);
+          return { id: l.id, name: p ? p.name : l.id, qty: l.qty, price: p ? p.price : 0 };
+        }),
       });
       localStorage.setItem(KEYS.orders, JSON.stringify(prev));
+      // Decrement stock so the shopper + admin both see live inventory.
+      const updated = products.map((p) => {
+        const l = cart.find((x) => x.id === p.id);
+        return l ? { ...p, stock: Math.max(0, p.stock - l.qty) } : p;
+      });
+      setProducts(updated);
+      localStorage.setItem(KEYS.products, JSON.stringify(updated));
     } catch {}
-    const text = `Hi! I want to grab some BM Green House Dates Seed Powder. 🌱\n\nOrder Details:\n- Quantity: ${quantity} x 100g\n- Total: ₹${subtotal}\n\nCan you share the payment and delivery details? Thanks!`;
+    setCart([]);
+    const text = `Hi! I want to order from BM Green House 🌱\n\n${lines.join("\n")}\n\nTotal: ₹${subtotal}\n\nCan you share the payment and delivery details? Thanks!`;
     window.open(`https://wa.me/${config.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
@@ -197,7 +248,7 @@ export default function Home() {
             className="flex items-center shrink-0 gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-2 rounded-full text-sm font-bold transition-colors duration-300 shadow-sm ml-2"
           >
             <ShoppingCart weight="bold" />
-            <span>{quantity}</span>
+            <span>{units}</span>
           </button>
         </div>
       </motion.nav>
@@ -219,8 +270,8 @@ export default function Home() {
             <FadeUp delay={0.2}>
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-[var(--accent)] blur-xl opacity-40 animate-pulse rounded-full" />
-                <button onClick={() => setCartOpen(true)} disabled={!config.isLive || config.stock <= 0} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:hover:scale-100">
-                  <span>{!config.isLive ? "Currently Offline" : config.stock <= 0 ? "Out of Stock" : `Buy Now — ₹${config.price}`}</span>
+                <button onClick={() => { if (featured) { addToCart(featured.id, 1); setCartOpen(true); } }} disabled={!config.isLive || !featured || featured.stock <= 0} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:hover:scale-100">
+                  <span>{!config.isLive ? "Currently Offline" : !featured || featured.stock <= 0 ? "Out of Stock" : `Buy Now — ₹${featured.price}`}</span>
                   <ArrowRight size={20} weight="bold" />
                 </button>
               </div>
@@ -362,6 +413,47 @@ export default function Home() {
               <p className="text-[var(--muted)] leading-relaxed">Packed with minerals like magnesium, calcium, and iron. It supports digestion and boosts your immune system natively.</p>
             </FadeUp>
           </div>
+        </div>
+      </section>
+
+      {/* Shop — every product from Admin → Products shows here automatically */}
+      <section id="products" className="py-24 px-6 relative z-10 bg-[var(--surface)] border-y border-[var(--border)]">
+        <div className="container mx-auto max-w-[1200px]">
+          <FadeUp className="text-center mb-14">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-4">Shop the collection</h2>
+            <p className="text-lg text-[var(--muted)]">Managed live from the admin panel — prices & stock update instantly.</p>
+          </FadeUp>
+          {liveProducts.length === 0 ? (
+            <p className="text-center text-[var(--muted)] font-medium">No products available right now — check back soon.</p>
+          ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {liveProducts.map((p, i) => (
+              <FadeUp key={p.id} delay={Math.min(i * 0.1, 0.3)} className="bg-[var(--background)] rounded-3xl border border-[var(--border)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden flex flex-col">
+                <div className="relative bg-white p-8 flex items-center justify-center min-h-[260px]">
+                  {p.tag ? <span className="absolute top-4 left-4 bg-[var(--accent)] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">{p.tag}</span> : null}
+                  {productDiscount(p) > 0 && <span className="absolute top-4 right-4 bg-[#F5A623] text-white text-[10px] font-bold px-3 py-1 rounded-full">-{productDiscount(p)}%</span>}
+                  <Image src={p.image || "/product-png2.png"} alt={p.name} width={180} height={260} className="object-contain drop-shadow-xl max-h-[240px] w-auto" />
+                </div>
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="text-xl font-extrabold text-[var(--foreground)]">{p.name}</h3>
+                  <p className="text-sm text-[var(--muted)] font-medium mt-1 mb-1">{p.subtitle}</p>
+                  {p.description ? <p className="text-sm text-[var(--muted)] line-clamp-2 mb-3">{p.description}</p> : null}
+                  <div className="flex items-center gap-2 mb-1">
+                    <b className="text-2xl text-[var(--foreground)]">₹{p.price}</b>
+                    {p.comparePrice > p.price && <s className="text-[var(--muted)]">₹{p.comparePrice}</s>}
+                  </div>
+                  <p className={`text-xs font-bold mb-4 ${p.stock <= 0 ? "text-red-500" : p.stock <= config.lowStockThreshold ? "text-[#F5A623]" : "text-[var(--accent)]"}`}>
+                    {p.stock <= 0 ? "Out of stock" : p.stock <= config.lowStockThreshold ? `Only ${p.stock} left!` : "In stock"}
+                  </p>
+                  <button onClick={() => { addToCart(p.id, 1); setCartOpen(true); }} disabled={p.stock <= 0}
+                    className="btn-primary w-full py-3 rounded-full text-sm mt-auto disabled:opacity-50">
+                    {p.stock <= 0 ? "SOLD OUT" : "ADD TO BASKET"}
+                  </button>
+                </div>
+              </FadeUp>
+            ))}
+          </div>
+          )}
         </div>
       </section>
 
@@ -523,37 +615,47 @@ export default function Home() {
               <button onClick={() => setCartOpen(false)} className="text-[#ADB5BD] hover:text-[#212529]">✕</button>
             </div>
 
-            <div className="flex gap-4 mb-8 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
-              <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
-                <Image src="/product-png2.png" alt="Product" fill className="object-contain p-2 drop-shadow-lg" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <h3 className="font-bold text-[#212529] mb-1">{config.name}</h3>
-                <p className="text-sm text-[#6C757D] mb-2">{config.subtitle}</p>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#F5A623]">₹{config.price}</span>
-                  <span className="text-xs text-[#ADB5BD] line-through">₹{config.comparePrice}</span>
+            {cart.length === 0 ? (
+              <p className="text-center text-[#6C757D] py-8">Your basket is empty.<br />Add something from the shop below 👇</p>
+            ) : (
+            <div className="flex flex-col gap-4 mb-8 max-h-[320px] overflow-y-auto pr-1">
+              {cart.map((l) => {
+                const p = products.find((x) => x.id === l.id);
+                if (!p) return null;
+                return (
+                <div key={l.id} className="flex gap-4 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
+                  <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
+                    <Image src={p.image || "/product-png2.png"} alt={p.name} fill className="object-contain p-2 drop-shadow-lg" />
+                  </div>
+                  <div className="flex flex-col justify-center flex-1 min-w-0">
+                    <h3 className="font-bold text-[#212529] mb-1 truncate">{p.name}</h3>
+                    <p className="text-sm text-[#6C757D] mb-2 truncate">{p.subtitle}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-bold text-[#F5A623]">₹{p.price}</span>
+                      {p.comparePrice > p.price && <span className="text-xs text-[#ADB5BD] line-through">₹{p.comparePrice}</span>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setLineQty(l.id, l.qty - 1)} className="w-7 h-7 rounded-full bg-white border border-[#E9ECEF] flex items-center justify-center font-bold text-sm">-</button>
+                      <span className="text-sm font-bold w-4 text-center">{l.qty}</span>
+                      <button onClick={() => setLineQty(l.id, l.qty + 1)} className="w-7 h-7 rounded-full bg-white border border-[#E9ECEF] flex items-center justify-center font-bold text-sm">+</button>
+                      <button onClick={() => setLineQty(l.id, 0)} className="text-xs text-[#ADB5BD] hover:text-red-500 ml-auto font-bold">Remove</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+                );
+              })}
             </div>
-
-            <div className="flex items-center justify-between mb-8">
-              <span className="text-sm font-bold text-[var(--foreground)]">Quantity</span>
-              <div className="flex items-center gap-4 border border-[var(--border)] rounded-full p-1 bg-[var(--surface-hover)]">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--surface)] text-[var(--foreground)] font-bold shadow-sm">-</button>
-                <span className="w-4 text-center text-sm font-bold text-[var(--foreground)]">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--surface)] text-[var(--foreground)] font-bold shadow-sm">+</button>
-              </div>
-            </div>
+            )}
 
             <div className="border-t border-[var(--border)] pt-6 mb-6 flex justify-between items-center text-xl font-black text-[var(--foreground)]">
               <span>Total</span>
               <span className="text-[var(--accent)]">₹{subtotal}</span>
             </div>
 
-            <button onClick={handleOrder} className="btn-primary w-full py-4 rounded-full text-base tracking-widest shadow-lg">
+            <button onClick={handleOrder} disabled={cart.length === 0} className="btn-primary w-full py-4 rounded-full text-base tracking-widest shadow-lg disabled:opacity-50">
               CHECKOUT VIA WHATSAPP
             </button>
+            {config.deliveryNote ? <p className="text-center text-xs text-[#6C757D] mt-3">{config.deliveryNote}</p> : null}
           </motion.div>
         </div>
       )}

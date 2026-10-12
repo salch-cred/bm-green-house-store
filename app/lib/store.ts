@@ -62,6 +62,37 @@ export type Review = {
   date: string;
 };
 
+export type Product = {
+  id: string;
+  name: string;
+  subtitle: string;
+  price: number;
+  comparePrice: number;
+  stock: number;
+  image: string;
+  tag: string;
+  isLive: boolean;
+  description: string;
+};
+
+export const defaultProducts: Product[] = [
+  {
+    id: "dates-seed-100g",
+    name: "Roasted Dates Seed Powder",
+    subtitle: "100g Original Blend",
+    price: 160,
+    comparePrice: 299,
+    stock: 48,
+    image: "/product-png2.png",
+    tag: "Bestseller",
+    isLive: true,
+    description:
+      "100% natural roasted date seeds — caffeine-free, zero added sugar, rich in antioxidants and minerals.",
+  },
+];
+
+export type OrderItem = { id: string; name: string; qty: number; price: number };
+
 export type Order = {
   id: string;
   qty: number;
@@ -69,10 +100,12 @@ export type Order = {
   date: string;
   status: "new" | "packed" | "delivered" | "cancelled";
   note?: string;
+  items?: OrderItem[];
 };
 
 export const KEYS = {
   config: "bm-store-config",
+  products: "bm-store-products",
   blogs: "bm-store-blogs",
   reviews: "bm-store-reviews",
   orders: "bm-store-orders",
@@ -128,9 +161,66 @@ export function stockValue(c: StoreConfig): number {
 }
 
 export function toCSV(orders: Order[]): string {
-  const head = "id,date,qty,total,status,note";
-  const rows = orders.map((o) =>
-    [o.id, `"${o.date}"`, o.qty, o.total, o.status, `"${(o.note || "").replace(/"/g, '""')}"`].join(",")
-  );
+  const head = "id,date,qty,total,status,note,items";
+  const rows = orders.map((o) => {
+    const items = (o.items || []).map((i) => `${i.name} x${i.qty}`).join("; ");
+    return [o.id, `"${o.date}"`, o.qty, o.total, o.status, `"${(o.note || "").replace(/"/g, '""')}"`, `"${items.replace(/"/g, '""')}"`].join(",");
+  });
   return [head, ...rows].join("\n");
+}
+
+// ---- multi-product catalog ----
+// Migrates the old single-product config into the catalog on first run so
+// existing admin edits are preserved.
+export function loadProducts(): Product[] {
+  if (typeof window === "undefined") return defaultProducts;
+  try {
+    const raw = localStorage.getItem(KEYS.products);
+    if (raw) {
+      const list = JSON.parse(raw) as Product[];
+      if (Array.isArray(list) && list.length > 0) return list;
+    }
+    const cfg = loadConfig();
+    const looksCustom =
+      cfg.name !== defaultConfig.name ||
+      cfg.price !== defaultConfig.price ||
+      cfg.stock !== defaultConfig.stock;
+    if (looksCustom) {
+      const migrated: Product[] = [{
+        id: "dates-seed-100g",
+        name: cfg.name,
+        subtitle: cfg.subtitle,
+        price: cfg.price,
+        comparePrice: cfg.comparePrice,
+        stock: cfg.stock,
+        image: "/product-png2.png",
+        tag: "Bestseller",
+        isLive: cfg.isLive,
+        description: "",
+      }];
+      localStorage.setItem(KEYS.products, JSON.stringify(migrated));
+      return migrated;
+    }
+    return defaultProducts;
+  } catch {
+    return defaultProducts;
+  }
+}
+
+export function productDiscount(p: Product): number {
+  if (!p.comparePrice || p.comparePrice <= p.price) return 0;
+  return Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100);
+}
+
+export type CartLine = { id: string; qty: number };
+
+export function cartCount(cart: CartLine[]): number {
+  return cart.reduce((s, l) => s + l.qty, 0);
+}
+
+export function cartTotal(cart: CartLine[], products: Product[]): number {
+  return cart.reduce((s, l) => {
+    const p = products.find((x) => x.id === l.id);
+    return s + (p ? p.price * l.qty : 0);
+  }, 0);
 }

@@ -1,23 +1,25 @@
-"use client";
+﻿"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Package, Article, CheckCircle, Image as ImageIcon, Video,
   Star, Truck, Gear, SquaresFour, SignOut, BookOpen, UploadSimple, DownloadSimple,
+  ShoppingCart,
 } from "@phosphor-icons/react";
 import {
-  defaultConfig, KEYS, discountPct, expectedPassword, loadJSON, saveJSON, stockValue, toCSV,
-  type BlogPost, type Order, type Review, type StoreConfig,
+  defaultConfig, defaultProducts, KEYS, discountPct, expectedPassword, loadJSON, loadProducts, saveJSON, stockValue, toCSV, productDiscount,
+  type BlogPost, type Order, type Product, type Review, type StoreConfig,
 } from "../lib/store";
 
 // Kept for backward compat: app/blogs/page.tsx imports this type from here.
 export type { BlogPost } from "../lib/store";
 
-type Tab = "dashboard" | "store" | "blogs" | "reviews" | "orders" | "media" | "settings" | "guide";
+type Tab = "dashboard" | "products" | "store" | "blogs" | "reviews" | "orders" | "media" | "settings" | "guide";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Dashboard", icon: <SquaresFour size={20} /> },
+  { id: "products", label: "Products", icon: <ShoppingCart size={20} /> },
   { id: "store", label: "Storefront", icon: <Package size={20} /> },
   { id: "blogs", label: "Blogs", icon: <Article size={20} /> },
   { id: "reviews", label: "Reviews", icon: <Star size={20} /> },
@@ -52,6 +54,13 @@ export default function Admin() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderFilter, setOrderFilter] = useState<"all" | Order["status"]>("all");
 
+  // Products catalog (the shop on the homepage reads this)
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [productForm, setProductForm] = useState<Partial<Product>>({});
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [productImgUploading, setProductImgUploading] = useState(false);
+  const productImgRef = useRef<HTMLInputElement>(null);
+
   const [mediaUrl, setMediaUrl] = useState("");
   const [mediaUploading, setMediaUploading] = useState(false);
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +73,7 @@ export default function Admin() {
   // ---- load all demo data ----
   useEffect(() => {
     setConfig({ ...defaultConfig, ...loadJSON(KEYS.config, defaultConfig) });
+    setProducts(loadProducts());
     setBlogs(loadJSON<BlogPost[]>(KEYS.blogs, []));
     setReviews(loadJSON<Review[]>(KEYS.reviews, []));
     setOrders(loadJSON<Order[]>(KEYS.orders, []));
@@ -92,6 +102,98 @@ export default function Admin() {
     setConfig(defaultConfig);
     saveJSON(KEYS.config, defaultConfig);
     flash("Storefront reset to defaults");
+  };
+
+  // ---- products catalog ----
+  const persistProducts = (list: Product[]) => {
+    setProducts(list);
+    saveJSON(KEYS.products, list);
+  };
+
+  const emptyProductForm: Partial<Product> = {
+    name: "", subtitle: "", price: 160, comparePrice: 299, stock: 20,
+    image: "/product-png2.png", tag: "", isLive: true, description: "",
+  };
+
+  const saveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.name || productForm.price === undefined) return;
+    if (editingProductId) {
+      persistProducts(products.map((p) => (p.id === editingProductId ? { ...p, ...productForm } as Product : p)));
+      flash("Product updated ✓ live on homepage shop");
+    } else {
+      const p: Product = {
+        id: `prod-${Date.now()}`,
+        name: productForm.name,
+        subtitle: productForm.subtitle || "",
+        price: Number(productForm.price) || 0,
+        comparePrice: Number(productForm.comparePrice) || 0,
+        stock: Number(productForm.stock) || 0,
+        image: productForm.image || "/product-png2.png",
+        tag: productForm.tag || "",
+        isLive: productForm.isLive !== false,
+        description: productForm.description || "",
+      };
+      persistProducts([...products, p]);
+      flash("Product added ✓ live on homepage shop");
+    }
+    setProductForm({});
+    setEditingProductId(null);
+  };
+
+  const startEditProduct = (p: Product) => {
+    setEditingProductId(p.id);
+    setProductForm({ ...p });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteProduct = (id: string) => {
+    if (products.length <= 1) { alert("Keep at least one product — the hero Buy button needs it."); return; }
+    if (!confirm("Delete this product from the shop?")) return;
+    persistProducts(products.filter((p) => p.id !== id));
+  };
+
+  const toggleProductLive = (id: string) => {
+    persistProducts(products.map((p) => (p.id === id ? { ...p, isLive: !p.isLive } : p)));
+  };
+
+  const featureProduct = (id: string) => {
+    const p = products.find((x) => x.id === id);
+    if (!p) return;
+    persistProducts([p, ...products.filter((x) => x.id !== id)]);
+    flash("Set as featured (first in shop + hero Buy button)");
+  };
+
+  const uploadProductImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProductImgUploading(true);
+    try {
+      const res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, { method: "POST", body: file });
+      const blob = await res.json();
+      if (!res.ok) throw new Error(blob.error || "upload failed");
+      setProductForm((f) => ({ ...f, image: blob.url }));
+      flash("Image uploaded");
+    } catch {
+      alert("Upload failed. Check BLOB_READ_WRITE_TOKEN, or paste an image URL.");
+    } finally {
+      setProductImgUploading(false);
+    }
+  };
+
+  const featured = products[0];
+  const totalStock = products.reduce((s, p) => s + p.stock, 0);
+  const totalValue = products.reduce((s, p) => s + p.price * p.stock, 0);
+
+  // Featured product = products[0]: shown first in shop + hero Buy button.
+  // Mirrors legacy config fields so old stored data stays consistent.
+  const updateFeatured = (patch: Partial<Product>) => {
+    if (!featured) return;
+    const next = { ...featured, ...patch };
+    persistProducts(products.map((p) => (p.id === featured.id ? next : p)));
+    const c = { ...config, name: next.name, subtitle: next.subtitle, price: next.price, comparePrice: next.comparePrice, stock: next.stock, isLive: config.isLive };
+    setConfig(c);
+    saveJSON(KEYS.config, c);
   };
 
   // ---- blogs ----
@@ -244,6 +346,7 @@ export default function Admin() {
   const exportAll = () => {
     const data = {
       config: loadJSON(KEYS.config, defaultConfig),
+      products: loadJSON(KEYS.products, defaultProducts),
       blogs: loadJSON(KEYS.blogs, []),
       reviews: loadJSON(KEYS.reviews, []),
       orders: loadJSON(KEYS.orders, []),
@@ -261,6 +364,7 @@ export default function Admin() {
     try {
       const data = JSON.parse(await file.text());
       if (data.config) { setConfig({ ...defaultConfig, ...data.config }); saveJSON(KEYS.config, data.config); }
+      if (data.products) { setProducts(data.products); saveJSON(KEYS.products, data.products); }
       if (data.blogs) { setBlogs(data.blogs); saveJSON(KEYS.blogs, data.blogs); }
       if (data.reviews) { setReviews(data.reviews); saveJSON(KEYS.reviews, data.reviews); }
       if (data.orders) { setOrders(data.orders); saveJSON(KEYS.orders, data.orders); }
@@ -270,12 +374,14 @@ export default function Admin() {
     }
   };
   const resetAll = () => {
-    if (!confirm("Erase ALL demo data (config, blogs, reviews, orders)?")) return;
+    if (!confirm("Erase ALL demo data (config, products, blogs, reviews, orders)?")) return;
     localStorage.removeItem(KEYS.config);
+    localStorage.removeItem(KEYS.products);
     localStorage.removeItem(KEYS.blogs);
     localStorage.removeItem(KEYS.reviews);
     localStorage.removeItem(KEYS.orders);
     setConfig(defaultConfig);
+    setProducts(defaultProducts);
     setBlogs([]); setReviews([]); setOrders([]);
     flash("All demo data cleared");
   };
@@ -309,7 +415,7 @@ export default function Admin() {
     );
   }
 
-  const lowStock = config.stock <= config.lowStockThreshold;
+  const lowStockList = products.filter((p) => p.stock <= config.lowStockThreshold);
 
   return (
     <main className="min-h-screen bg-[var(--background)] flex flex-col md:flex-row text-[var(--foreground)]">
@@ -354,7 +460,8 @@ export default function Admin() {
             <h1 className="text-3xl md:text-4xl font-extrabold mb-2 capitalize">{tab === "guide" ? "Working procedure." : tab === "dashboard" ? "Good afternoon." : `Manage ${tab}.`}</h1>
             <p className="text-[var(--muted)] font-medium text-sm">
               {tab === "dashboard" && "Store health at a glance."}
-              {tab === "store" && "Product, hero, announcement, brand — everything the homepage reads."}
+              {tab === "products" && "Add unlimited products — they appear in the homepage shop."}
+              {tab === "store" && "Featured product, hero, announcement, brand — everything the homepage reads."}
               {tab === "blogs" && "Create, edit, search and delete posts (/blogs)."}
               {tab === "reviews" && "Moderate customer reviews (/reviews)."}
               {tab === "orders" && "WhatsApp checkouts land here. Update status, export CSV."}
@@ -372,13 +479,14 @@ export default function Admin() {
         {/* ============ DASHBOARD ============ */}
         {tab === "dashboard" && (
           <div className="max-w-5xl">
-            {lowStock && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 font-bold text-sm rounded-2xl px-5 py-4">⚠ Low stock: only {config.stock} packs left (threshold {config.lowStockThreshold}). Update stock in Storefront tab.</div>}
+            {lowStockList.length > 0 && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 font-bold text-sm rounded-2xl px-5 py-4">⚠ Low stock: {lowStockList.map((p) => `${p.name} (${p.stock})`).join(", ")} — restock in Products tab.</div>}
             {!config.isLive && <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 font-bold text-sm rounded-2xl px-5 py-4">Store is OFFLINE — Buy button is disabled on the homepage. Re-enable in Storefront tab.</div>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 { l: "Store status", v: config.isLive ? "● Live" : "○ Offline", s: "homepage buy button" },
-                { l: "Stock", v: `${config.stock} packs`, s: `₹${stockValue(config).toLocaleString()} value` },
-                { l: "Discount", v: `${discountPct(config)}% off`, s: `₹${config.price} vs ₹${config.comparePrice}` },
+                { l: "Products", v: `${products.length} live`, s: `${totalStock} units total` },
+                { l: "Stock value", v: `₹${totalValue.toLocaleString()}`, s: "across catalog" },
+                { l: "Featured deal", v: featured ? `${productDiscount(featured)}% off` : "—", s: featured ? `${featured.name.slice(0, 24)}` : "" },
                 { l: "Revenue (logged)", v: `₹${revenue.toLocaleString()}`, s: `${orders.length} orders · ${newOrders} new` },
                 { l: "Blogs", v: `${blogs.length}`, s: "posts at /blogs" },
                 { l: "Reviews", v: `${reviews.length} · ${avgRating}★`, s: "at /reviews" },
@@ -396,7 +504,8 @@ export default function Admin() {
               <div className={cardCls}>
                 <h3 className="font-extrabold text-lg mb-4">Quick actions</h3>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={() => setTab("store")} className="btn-primary px-5 py-2.5 rounded-xl text-xs">Edit storefront</button>
+                  <button onClick={() => setTab("products")} className="btn-primary px-5 py-2.5 rounded-xl text-xs">Add product</button>
+                  <button onClick={() => setTab("store")} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">Edit storefront</button>
                   <button onClick={() => setTab("blogs")} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">New blog</button>
                   <button onClick={() => setTab("orders")} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">View orders ({newOrders} new)</button>
                   <button onClick={exportAll} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">Backup JSON</button>
@@ -420,6 +529,95 @@ export default function Admin() {
           </div>
         )}
 
+        {/* ============ PRODUCTS ============ */}
+        {tab === "products" && (
+          <div className="max-w-5xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Products</span>
+                <b className="text-xl block mb-1">{products.filter((p) => p.isLive).length} / {products.length} live</b>
+                <small className="text-[var(--muted)] font-medium">hidden ones don&apos;t show in shop</small>
+              </div>
+              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Total units</span>
+                <b className="text-xl block mb-1">{totalStock}</b>
+                <small className="text-[var(--muted)] font-medium">across catalog</small>
+              </div>
+              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Inventory value</span>
+                <b className="text-xl block mb-1">₹{totalValue.toLocaleString()}</b>
+                <small className="text-[var(--muted)] font-medium">at selling price</small>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <form onSubmit={saveProduct} className={`${cardCls} h-fit`}>
+                <h2 className="text-xl font-extrabold mb-1">{editingProductId ? "Edit product" : "Add product"}</h2>
+                <p className="text-xs text-[var(--muted)] mb-6">Appears in the homepage shop instantly. First product = featured (hero Buy button).</p>
+                <div className="grid gap-5">
+                  <label className="block"><span className={labelCls}>Product name *</span><input required value={productForm.name || ""} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} placeholder="e.g. Dates Seed Powder 200g" className={inputCls} /></label>
+                  <label className="block"><span className={labelCls}>Subtitle / variant</span><input value={productForm.subtitle || ""} onChange={(e) => setProductForm({ ...productForm, subtitle: e.target.value })} placeholder="e.g. 200g Family Pack" className={inputCls} /></label>
+                  <div className="grid grid-cols-2 gap-5">
+                    <label className="block"><span className={labelCls}>Price (₹) *</span><input type="number" min={0} required value={productForm.price ?? ""} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} className={inputCls} /></label>
+                    <label className="block"><span className={labelCls}>Compare (₹)</span><input type="number" min={0} value={productForm.comparePrice ?? ""} onChange={(e) => setProductForm({ ...productForm, comparePrice: Number(e.target.value) })} className={inputCls} /></label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-5">
+                    <label className="block"><span className={labelCls}>Stock</span><input type="number" min={0} value={productForm.stock ?? ""} onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })} className={inputCls} /></label>
+                    <label className="block"><span className={labelCls}>Badge / tag</span><input value={productForm.tag || ""} onChange={(e) => setProductForm({ ...productForm, tag: e.target.value })} placeholder="Bestseller / New" className={inputCls} /></label>
+                  </div>
+                  <div className="block">
+                    <span className={labelCls}>Product image</span>
+                    <div className="relative mb-3">
+                      <input type="file" accept="image/*" ref={productImgRef} onChange={uploadProductImage} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={productImgUploading} />
+                      <div className={`flex items-center gap-3 border border-dashed border-[var(--border)] rounded-xl px-4 py-4 text-sm text-[var(--muted)] ${productImgUploading ? "animate-pulse" : ""}`}>
+                        <UploadSimple size={20} /> {productImgUploading ? "Uploading…" : "Upload photo, or paste URL below"}
+                      </div>
+                    </div>
+                    <input value={productForm.image || ""} onChange={(e) => setProductForm({ ...productForm, image: e.target.value })} placeholder="/product-png2.png or https://…" className={inputCls} />
+                    {productForm.image ? <img src={productForm.image} alt="preview" className="mt-3 h-28 w-auto object-contain bg-[var(--surface-hover)] rounded-xl border border-[var(--border)] p-2" /> : null}
+                  </div>
+                  <label className="block"><span className={labelCls}>Description</span><textarea rows={2} value={productForm.description || ""} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className={inputCls} /></label>
+                  <label className="flex items-center gap-3 bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-4 py-3 cursor-pointer">
+                    <input type="checkbox" checked={productForm.isLive !== false} onChange={(e) => setProductForm({ ...productForm, isLive: e.target.checked })} className="w-5 h-5 accent-[#3E5A3B]" />
+                    <span className="font-bold text-sm">Visible in shop</span>
+                  </label>
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <button type="submit" className="btn-primary px-8 py-3.5 rounded-xl text-sm">{editingProductId ? "Update product" : "Add product"}</button>
+                  {editingProductId && <button type="button" onClick={() => { setEditingProductId(null); setProductForm({}); }} className="px-6 py-3.5 rounded-xl text-sm font-bold border border-[var(--border)]">Cancel</button>}
+                </div>
+              </form>
+
+              <div className="flex flex-col gap-4">
+                {products.map((p, idx) => (
+                  <div key={p.id} className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex gap-4">
+                    <div className="w-20 h-24 bg-[var(--surface-hover)] rounded-xl overflow-hidden shrink-0 border border-[var(--border)] relative">
+                      <img src={p.image || "/product-png2.png"} alt={p.name} className="w-full h-full object-contain p-1" />
+                      {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[var(--accent)] text-white text-[9px] font-bold rounded px-1 py-0.5">FEATURED</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <b className="block truncate">{p.name}</b>
+                          <p className="text-xs text-[var(--muted)] truncate">{p.subtitle}{p.tag ? ` · ${p.tag}` : ""}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${p.isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>{p.isLive ? "LIVE" : "HIDDEN"}</span>
+                      </div>
+                      <p className="text-sm mt-1"><b>₹{p.price}</b> <s className="text-[var(--muted)] text-xs">₹{p.comparePrice}</s> <span className="text-xs text-[var(--muted)]">· {p.stock} in stock</span></p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs font-bold">
+                        <button onClick={() => startEditProduct(p)} className="text-[var(--accent)] hover:underline">Edit</button>
+                        <button onClick={() => toggleProductLive(p.id)} className="text-[var(--muted)] hover:underline">{p.isLive ? "Hide" : "Show"}</button>
+                        {idx !== 0 && <button onClick={() => featureProduct(p.id)} className="text-[var(--muted)] hover:underline">Set featured</button>}
+                        <button onClick={() => deleteProduct(p.id)} className="text-[var(--muted)] hover:text-red-500">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ============ STORE ============ */}
         {tab === "store" && (
           <div className="max-w-5xl">
@@ -431,30 +629,30 @@ export default function Admin() {
               </div>
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
                 <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Available stock</span>
-                <b className="text-xl block mb-1">{config.stock}</b>
-                <small className="text-[var(--muted)] font-medium">100g packs · warn under {config.lowStockThreshold}</small>
+                <b className="text-xl block mb-1">{totalStock}</b>
+                <small className="text-[var(--muted)] font-medium">units · {products.length} products</small>
               </div>
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Discount</span>
-                <b className="text-xl block mb-1">{discountPct(config)}% off</b>
-                <small className="text-[var(--muted)] font-medium">₹{config.price} vs ₹{config.comparePrice}</small>
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block mb-1">Featured deal</span>
+                <b className="text-xl block mb-1">{featured ? `${productDiscount(featured)}% off` : "—"}</b>
+                <small className="text-[var(--muted)] font-medium">{featured ? `₹${featured.price} vs ₹${featured.comparePrice}` : "add a product"}</small>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <form onSubmit={(e) => { e.preventDefault(); saveStore(); }} className="lg:col-span-2 flex flex-col gap-8">
                 <div className={`${cardCls}`}>
-                  <h2 className="text-xl font-extrabold mb-1">Product settings</h2>
-                  <p className="text-xs text-[var(--muted)] mb-6">Shown in hero, cart and WhatsApp order text.</p>
+                  <h2 className="text-xl font-extrabold mb-1">Featured product <span className="text-xs font-bold text-[var(--accent)]">· also in Products tab</span></h2>
+                  <p className="text-xs text-[var(--muted)] mb-6">First in the shop + hero Buy Now button. Shown in cart and WhatsApp order text.</p>
                   <div className="grid gap-5">
-                    <label className="block"><span className={labelCls}>Product name</span><input value={config.name} onChange={(e) => field("name", e.target.value)} className={inputCls} /></label>
-                    <label className="block"><span className={labelCls}>Short description</span><input value={config.subtitle} onChange={(e) => field("subtitle", e.target.value)} className={inputCls} /></label>
+                    <label className="block"><span className={labelCls}>Product name</span><input value={featured?.name ?? ""} onChange={(e) => updateFeatured({ name: e.target.value })} className={inputCls} /></label>
+                    <label className="block"><span className={labelCls}>Short description</span><input value={featured?.subtitle ?? ""} onChange={(e) => updateFeatured({ subtitle: e.target.value })} className={inputCls} /></label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <label className="block"><span className={labelCls}>Price (₹)</span><input type="number" min={0} value={config.price} onChange={(e) => numField("price", e.target.value)} className={inputCls} /></label>
-                      <label className="block"><span className={labelCls}>Compare price (₹)</span><input type="number" min={0} value={config.comparePrice} onChange={(e) => numField("comparePrice", e.target.value)} className={inputCls} /></label>
+                      <label className="block"><span className={labelCls}>Price (₹)</span><input type="number" min={0} value={featured?.price ?? 0} onChange={(e) => updateFeatured({ price: Number(e.target.value) || 0 })} className={inputCls} /></label>
+                      <label className="block"><span className={labelCls}>Compare price (₹)</span><input type="number" min={0} value={featured?.comparePrice ?? 0} onChange={(e) => updateFeatured({ comparePrice: Number(e.target.value) || 0 })} className={inputCls} /></label>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <label className="block"><span className={labelCls}>Available stock</span><input type="number" min={0} value={config.stock} onChange={(e) => numField("stock", e.target.value)} className={inputCls} /></label>
+                      <label className="block"><span className={labelCls}>Available stock</span><input type="number" min={0} value={featured?.stock ?? 0} onChange={(e) => updateFeatured({ stock: Number(e.target.value) || 0 })} className={inputCls} /></label>
                       <label className="block"><span className={labelCls}>Low-stock warning under</span><input type="number" min={1} value={config.lowStockThreshold} onChange={(e) => numField("lowStockThreshold", e.target.value)} className={inputCls} /></label>
                     </div>
                     <label className="flex items-center gap-3 bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-4 py-3 cursor-pointer">
@@ -500,10 +698,10 @@ export default function Admin() {
                 <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider block mb-6">Live preview</span>
                 <div className="bg-[var(--surface-hover)] rounded-2xl p-4 flex flex-col items-center text-center border border-[var(--border)] relative overflow-hidden">
                   <div className="absolute top-3 right-3 bg-[var(--accent)] text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm"><span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse"></span> LIVE</div>
-                  <Image src="/product-png2.png" alt="Product" width={140} height={220} className="drop-shadow-xl my-4" />
-                  <h3 className="font-extrabold text-lg mt-2">{config.name}</h3>
-                  <p className="text-[var(--muted)] text-xs font-medium mt-1 mb-3">{config.subtitle}</p>
-                  <div className="flex items-center gap-2 mb-2"><b className="text-xl">₹{config.price}</b><s className="text-[var(--muted)] text-sm">₹{config.comparePrice}</s></div>
+                  <Image src={featured?.image || "/product-png2.png"} alt="Product" width={140} height={220} className="drop-shadow-xl my-4 object-contain max-h-[220px] w-auto" />
+                  <h3 className="font-extrabold text-lg mt-2">{featured?.name}</h3>
+                  <p className="text-[var(--muted)] text-xs font-medium mt-1 mb-3">{featured?.subtitle}</p>
+                  <div className="flex items-center gap-2 mb-2"><b className="text-xl">₹{featured?.price}</b><s className="text-[var(--muted)] text-sm">₹{featured?.comparePrice}</s></div>
                   <p className="text-[11px] text-[var(--muted)]">{config.heroTagline}</p>
                 </div>
                 <a href={`https://wa.me/${config.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Hi BM Green House! Test message from admin.")}`} target="_blank" rel="noreferrer"
@@ -637,8 +835,13 @@ export default function Admin() {
               {visibleOrders.map((o) => (
                 <div key={o.id} className={`${cardCls} !p-5 flex flex-col md:flex-row md:items-center gap-4`}>
                   <div className="flex-1">
-                    <b>#{o.id.slice(-6)} · {o.qty} × 100g · ₹{o.total}</b>
+                    <b>#{o.id.slice(-6)} · {o.qty} × · ₹{o.total}</b>
                     <p className="text-xs text-[var(--muted)] mt-1">{o.date}{o.note ? ` · ${o.note}` : ""}</p>
+                    {o.items && o.items.length > 0 && (
+                      <ul className="text-xs text-[var(--muted)] mt-1 list-disc list-inside">
+                        {o.items.map((it, i) => <li key={i}>{it.name} × {it.qty} — ₹{it.price * it.qty}</li>)}
+                      </ul>
+                    )}
                   </div>
                   <select value={o.status} onChange={(e) => setOrderStatus(o.id, e.target.value as Order["status"])} className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-bold">
                     <option value="new">new</option><option value="packed">packed</option><option value="delivered">delivered</option><option value="cancelled">cancelled</option>
@@ -690,7 +893,7 @@ export default function Admin() {
           <div className="max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className={cardCls}>
               <h2 className="text-xl font-extrabold mb-1">Backup & restore</h2>
-              <p className="text-xs text-[var(--muted)] mb-6">Download one JSON with config + blogs + reviews + orders. Import it on another device/browser.</p>
+              <p className="text-xs text-[var(--muted)] mb-6">Download one JSON with config + products + blogs + reviews + orders. Import it on another device/browser.</p>
               <div className="flex flex-wrap gap-3">
                 <button onClick={exportAll} className="btn-primary px-6 py-3 rounded-xl text-sm">Download backup</button>
                 <button onClick={() => importRef.current?.click()} className="px-6 py-3 rounded-xl text-sm font-bold border border-[var(--border)]">Import backup</button>
@@ -727,14 +930,15 @@ export default function Admin() {
                 {[
                   ["1 · Login", "Open /admin. Enter the admin password (env NEXT_PUBLIC_ADMIN_PASSWORD, fallback suhail123, or your local override from Settings). Login persists in this browser until Logout."],
                   ["2 · Dashboard", "Check Live status, stock vs threshold, discount %, revenue, new orders, blog/review counts. Red banner = low stock or offline store."],
-                  ["3 · Storefront", "Edit product (name, price, compare price, stock), toggle isLive, write hero + announcement + about + WhatsApp/Instagram. Save storefront → homepage updates instantly in the same browser (localStorage bm-store-config). Test WhatsApp link before festivals/sales."],
-                  ["4 · Orders (daily)", "Every homepage WhatsApp checkout is auto-logged here with qty + total + date. Filter by new/packed/delivered/cancelled, advance the status as you pack/ship, export CSV for your accounts. Clear done orders weekly."],
-                  ["5 · Blogs (weekly)", "Create post: title + content + optional photo/video (upload → Vercel Blob URL, or paste any https URL). Publish → appears at /blogs. Edit fixes typos; Delete removes. Search when the list grows."],
-                  ["6 · Reviews (daily)", "Customer reviews from /reviews appear here. Delete spam, add offline/WhatsApp feedback manually with star rating, track average rating. Delete-all is available for a fresh start."],
-                  ["7 · Media", "Upload campaign photos/videos to Vercel Blob and Copy the URL into blogs. Permanent brand assets (logo, product PNGs, hero videos in public/) must be replaced via git + redeploy, not here."],
-                  ["8 · Settings / backup", "Download backup JSON weekly (or before any sale). Import it to clone the store to another laptop/browser. Change local password here; change the global password via Vercel env var + redeploy. Erase demo data only when you mean it."],
-                  ["9 · Deploy & env", "npm install → cp .env.example .env.local → set NEXT_PUBLIC_ADMIN_PASSWORD, NEXT_PUBLIC_WHATSAPP_NUMBER, GROQ_API_KEY, BLOB_READ_WRITE_TOKEN → npm run dev to test, push to GitHub, import in Vercel, add the same env vars, Deploy. Share /admin password only with staff."],
-                  ["10 · Production upgrade path", "When ready: move bm-store-* from localStorage to Supabase tables (config singleton, blogs, reviews, orders) with server-side admin auth; keep this UI — only swap loadJSON/saveJSON for fetch calls."],
+                  ["3 · Products (add as many as you like)", "Products tab → Add product: name, variant, price, compare price, stock, photo (upload or URL), badge, description, visible toggle. It appears in the homepage shop (#products) instantly. First product = featured: drives the hero Buy Now button. Use Set featured to reorder, Hide to unlist without deleting."],
+                  ["4 · Storefront", "Edit the featured product shortcut, toggle the global isLive switch, write hero + announcement + about + WhatsApp/Instagram. Save storefront → homepage updates instantly in the same browser (localStorage bm-store-config). Test WhatsApp link before festivals/sales."],
+                  ["5 · Orders (daily)", "Every homepage WhatsApp checkout is auto-logged here with items + qty + total + date (stock auto-decrements). Filter by new/packed/delivered/cancelled, advance the status as you pack/ship, export CSV for your accounts. Clear done orders weekly."],
+                  ["6 · Blogs (weekly)", "Create post: title + content + optional photo/video (upload → Vercel Blob URL, or paste any https URL). Publish → appears at /blogs. Edit fixes typos; Delete removes. Search when the list grows."],
+                  ["7 · Reviews (daily)", "Customer reviews from /reviews appear here. Delete spam, add offline/WhatsApp feedback manually with star rating, track average rating. Delete-all is available for a fresh start."],
+                  ["8 · Media", "Upload campaign photos/videos to Vercel Blob and Copy the URL into blogs. Permanent brand assets (logo, product PNGs, hero videos in public/) must be replaced via git + redeploy, not here."],
+                  ["9 · Settings / backup", "Download backup JSON weekly (or before any sale). Import it to clone the store to another laptop/browser. Change local password here; change the global password via Vercel env var + redeploy. Erase demo data only when you mean it."],
+                  ["10 · Deploy & env", "npm install → cp .env.example .env.local → set NEXT_PUBLIC_ADMIN_PASSWORD, NEXT_PUBLIC_WHATSAPP_NUMBER, GROQ_API_KEY, BLOB_READ_WRITE_TOKEN → npm run dev to test, push to GitHub, import in Vercel, add the same env vars, Deploy. Share /admin password only with staff."],
+                  ["11 · Production upgrade path", "When ready: move bm-store-* from localStorage to Supabase tables (config singleton, blogs, reviews, orders) with server-side admin auth; keep this UI — only swap loadJSON/saveJSON for fetch calls."],
                 ].map(([t, d]) => (
                   <li key={t} className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-2xl p-5">
                     <b className="block mb-1">{t}</b><span className="text-[var(--muted)]">{d}</span>
