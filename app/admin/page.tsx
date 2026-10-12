@@ -401,7 +401,7 @@ export default function Admin() {
         <div className="bg-[var(--surface)] p-8 rounded-3xl shadow-sm border border-[var(--border)] max-w-sm w-full text-center">
           <Image src="/bm-logo.png" alt="Logo" width={64} height={64} className="mx-auto mb-6 rounded-xl shadow-sm" />
           <h1 className="text-2xl font-bold text-[var(--foreground)] mb-2">Admin Access</h1>
-          <p className="text-sm text-[var(--muted)] mb-6">Password = <code>NEXT_PUBLIC_ADMIN_PASSWORD</code> (fallback <code>suhail123</code>). You can override it in Settings.</p>
+          <p className="text-sm text-[var(--muted)] mb-6">Restricted area. Enter your admin password to continue.</p>
           <form onSubmit={login}>
             <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="Enter password"
               className="w-full bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-4 py-3 font-medium outline-none focus:border-[var(--accent)] transition-colors mb-4 text-center" />
