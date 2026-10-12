@@ -14,19 +14,13 @@ import {
 
 const ANIMATION_EASING = [0.32, 0.72, 0, 1] as any;
 
-export type StoreConfig = {
-  name: string; price: number; comparePrice: number; stock: number;
-  subtitle: string; whatsapp: string;
-};
+import { defaultConfig as _defaultConfig } from "./lib/store";
+import type { StoreConfig } from "./lib/store";
+import { KEYS, loadJSON } from "./lib/store";
 
-export const defaultConfig = {
-  name: "Roasted Dates Seed Powder",
-  price: 160,
-  comparePrice: 299,
-  stock: 48,
-  subtitle: "100g Original Blend",
-  whatsapp: "+91 8746077173"
-};
+// Re-exported for backward compat (admin + old imports).
+export type { StoreConfig } from "./lib/store";
+export const defaultConfig = _defaultConfig;
 
 const FadeUp = ({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) => (
   <motion.div
@@ -70,11 +64,23 @@ const LazyVideo = ({ src, className }: { src: string, className?: string }) => {
 };
 
 export default function Home() {
-  const [config, setConfig] = useState(defaultConfig);
+  const [config, setConfig] = useState(_defaultConfig);
   const [cartOpen, setCartOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load admin-saved storefront config (fixes old bug where admin edits never showed).
+  useEffect(() => {
+    setConfig(loadJSON(KEYS.config, _defaultConfig));
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === KEYS.config && e.newValue) {
+        try { setConfig({ ..._defaultConfig, ...JSON.parse(e.newValue) }); } catch {}
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -133,12 +139,30 @@ export default function Home() {
   const subtotal = config.price * quantity;
 
   const handleOrder = () => {
+    // Log order locally so Admin → Orders tab can fulfil it.
+    try {
+      const prev = loadJSON<any[]>(KEYS.orders, []);
+      prev.unshift({
+        id: Date.now().toString(),
+        qty: quantity,
+        total: subtotal,
+        date: new Date().toLocaleString(),
+        status: "new",
+        note: `${config.name} (${config.subtitle})`,
+      });
+      localStorage.setItem(KEYS.orders, JSON.stringify(prev));
+    } catch {}
     const text = `Hi! I want to grab some BM Green House Dates Seed Powder. 🌱\n\nOrder Details:\n- Quantity: ${quantity} x 100g\n- Total: ₹${subtotal}\n\nCan you share the payment and delivery details? Thanks!`;
     window.open(`https://wa.me/${config.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   return (
     <main className="min-h-screen bg-[var(--background)] selection:bg-[var(--accent)] selection:text-white pb-24">
+      {config.showAnnouncement && config.announcement ? (
+        <div className="bg-[var(--accent)] text-white text-center text-xs sm:text-sm font-bold tracking-wide px-4 py-2.5 relative z-[60]">
+          {config.announcement}
+        </div>
+      ) : null}
       {/* Subtle Pattern Background */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%23000000\\' fill-opacity=\\'1\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }}></div>
 
@@ -184,19 +208,19 @@ export default function Home() {
           <div className="flex-1 text-left">
             <FadeUp>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-[var(--foreground)] mb-4 sm:mb-6 leading-[1.1]">
-                Bringing families together, <br className="hidden sm:block"/><span className="text-[var(--accent)]">one delicious cup at a time.</span>
+                {config.heroTitle} <br className="hidden sm:block"/><span className="text-[var(--accent)]">{config.heroHighlight}</span>
               </h1>
             </FadeUp>
             <FadeUp delay={0.1}>
               <p className="text-xl text-[var(--muted)] mb-8 font-medium italic">
-                #BrewWithBMGreenHouse
+                {config.heroTagline}
               </p>
             </FadeUp>
             <FadeUp delay={0.2}>
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-[var(--accent)] blur-xl opacity-40 animate-pulse rounded-full" />
-                <button onClick={() => setCartOpen(true)} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-                  <span>Buy Now — ₹{config.price}</span>
+                <button onClick={() => setCartOpen(true)} disabled={!config.isLive || config.stock <= 0} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:hover:scale-100">
+                  <span>{!config.isLive ? "Currently Offline" : config.stock <= 0 ? "Out of Stock" : `Buy Now — ₹${config.price}`}</span>
                   <ArrowRight size={20} weight="bold" />
                 </button>
               </div>
@@ -382,9 +406,9 @@ export default function Home() {
         <div className="container mx-auto max-w-[800px] text-center">
           <FadeUp>
             <Image src="/bm-logo.png" alt="Logo" width={64} height={64} className="mx-auto mb-8 rounded-2xl shadow-sm" />
-            <h2 className="text-3xl font-bold text-[var(--foreground)] mb-6">Traditional Recipes, Modern Purity</h2>
+            <h2 className="text-3xl font-bold text-[var(--foreground)] mb-6">{config.aboutTitle}</h2>
             <p className="text-[var(--muted)] text-lg leading-relaxed mb-8">
-              Since our inception, BM Green House has been dedicated to bringing families together over healthy, natural meals. Our Roasted Dates Seed Powder is meticulously crafted using automated processing to ensure 100% purity without any preservatives.
+              {config.aboutText}
             </p>
             <Link href="/details" className="text-[var(--accent)] font-bold uppercase tracking-wider text-sm hover:underline">
               Read Our Story →
@@ -445,7 +469,7 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm font-medium text-[var(--muted)]">
-            <Link href="https://instagram.com/bmgreenhouse" target="_blank" className="flex items-center gap-2 hover:text-[var(--accent)] transition-colors">
+            <Link href={config.instagram || "https://instagram.com/bmgreenhouse"} target="_blank" className="flex items-center gap-2 hover:text-[var(--accent)] transition-colors">
               <InstagramLogo size={20} /> @bmgreenhouse
             </Link>
             <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors hidden md:block">Privacy Policy</Link>

@@ -11,7 +11,10 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`. Admin settings are at `/admin` and persist in the current browser for this demo.
+Open `http://localhost:3000`. Admin console is at `/admin` (tabs: Dashboard,
+Storefront, Blogs, Reviews, Orders, Media, Settings, Procedure) and persists
+in the current browser for this demo — see `ADMIN_GUIDE.md` for the full
+working procedure.
 
 ## Deploy to Vercel
 
