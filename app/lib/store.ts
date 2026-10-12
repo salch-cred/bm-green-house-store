@@ -139,7 +139,23 @@ export function loadJSON<T>(key: string, fallback: T): T {
 }
 
 export function saveJSON(key: string, value: unknown) {
-  localStorage.setItem(key, JSON.stringify(value));
+  // Never throws: storage-full (huge base64 photos) must not crash React.
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`[store] localStorage write failed for ${key}`, err);
+  }
+}
+
+// Quota-safe write: base64 review photos can exceed the ~5MB localStorage
+// limit and throw. Returns false so callers can warn instead of crashing.
+export function trySave(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function expectedPassword(): string {

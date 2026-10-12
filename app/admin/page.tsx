@@ -8,7 +8,7 @@ import {
   ShoppingCart,
 } from "@phosphor-icons/react";
 import {
-  defaultConfig, defaultProducts, KEYS, discountPct, expectedPassword, loadJSON, loadProducts, saveJSON, stockValue, toCSV, productDiscount,
+  defaultConfig, defaultProducts, KEYS, expectedPassword, loadJSON, loadProducts, saveJSON, toCSV, productDiscount, trySave,
   type BlogPost, type Order, type Product, type Review, type StoreConfig,
 } from "../lib/store";
 
@@ -107,12 +107,9 @@ export default function Admin() {
   // ---- products catalog ----
   const persistProducts = (list: Product[]) => {
     setProducts(list);
-    saveJSON(KEYS.products, list);
-  };
-
-  const emptyProductForm: Partial<Product> = {
-    name: "", subtitle: "", price: 160, comparePrice: 299, stock: 20,
-    image: "/product-png2.png", tag: "", isLive: true, description: "",
+    if (!trySave(KEYS.products, list)) {
+      flash("Saved in memory, but browser storage is FULL — use smaller images");
+    }
   };
 
   const saveProduct = (e: React.FormEvent) => {

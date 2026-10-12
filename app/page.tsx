@@ -92,6 +92,10 @@ export default function Home() {
 
   const liveProducts = products.filter((p) => p.isLive);
   const featured = liveProducts.find((p) => p.stock > 0) ?? liveProducts[0] ?? products[0];
+  const showAnnouncement = !!(config.showAnnouncement && config.announcement);
+  // Featured must itself be visible+stocked: if admin hid every product,
+  // `featured` falls back to a hidden one — never offer to buy it.
+  const featuredBuyable = !!featured && config.isLive && featured.isLive && featured.stock > 0;
   const units = cartCount(cart);
   const subtotal = cartTotal(cart, products);
 
@@ -209,7 +213,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[var(--background)] selection:bg-[var(--accent)] selection:text-white pb-24">
-      {config.showAnnouncement && config.announcement ? (
+      {showAnnouncement ? (
         <div className="bg-[var(--accent)] text-white text-center text-xs sm:text-sm font-bold tracking-wide px-4 py-2.5 relative z-[60]">
           {config.announcement}
         </div>
@@ -217,12 +221,12 @@ export default function Home() {
       {/* Subtle Pattern Background */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%23000000\\' fill-opacity=\\'1\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }}></div>
 
-      {/* Dynamic Island Header */}
-      <motion.nav 
+      {/* Dynamic Island Header — drops below the announcement bar when visible */}
+      <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: ANIMATION_EASING }}
-        className="fixed top-6 left-0 right-0 z-50 px-6 pointer-events-none flex justify-center"
+        className={`fixed left-0 right-0 z-50 px-6 pointer-events-none flex justify-center ${showAnnouncement ? "top-[52px]" : "top-6"}`}
       >
         <div 
           className="bg-[var(--surface)] border border-[var(--border)] rounded-full p-2 flex items-center pointer-events-auto shadow-md transition-all duration-500 hover:shadow-lg cursor-pointer overflow-hidden"
@@ -270,8 +274,8 @@ export default function Home() {
             <FadeUp delay={0.2}>
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-[var(--accent)] blur-xl opacity-40 animate-pulse rounded-full" />
-                <button onClick={() => { if (featured) { addToCart(featured.id, 1); setCartOpen(true); } }} disabled={!config.isLive || !featured || featured.stock <= 0} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:hover:scale-100">
-                  <span>{!config.isLive ? "Currently Offline" : !featured || featured.stock <= 0 ? "Out of Stock" : `Buy Now — ₹${featured.price}`}</span>
+                <button onClick={() => { if (featuredBuyable && featured) { addToCart(featured.id, 1); setCartOpen(true); } }} disabled={!featuredBuyable} className="btn-primary relative px-10 py-4 rounded-full text-lg shadow-lg flex items-center gap-3 hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:hover:scale-100">
+                  <span>{!featuredBuyable ? (!config.isLive ? "Currently Offline" : "Out of Stock") : `Buy Now — ₹${featured.price}`}</span>
                   <ArrowRight size={20} weight="bold" />
                 </button>
               </div>
@@ -432,7 +436,8 @@ export default function Home() {
                 <div className="relative bg-white p-8 flex items-center justify-center min-h-[260px]">
                   {p.tag ? <span className="absolute top-4 left-4 bg-[var(--accent)] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">{p.tag}</span> : null}
                   {productDiscount(p) > 0 && <span className="absolute top-4 right-4 bg-[#F5A623] text-white text-[10px] font-bold px-3 py-1 rounded-full">-{productDiscount(p)}%</span>}
-                  <Image src={p.image || "/product-png2.png"} alt={p.name} width={180} height={260} className="object-contain drop-shadow-xl max-h-[240px] w-auto" />
+                  {/* Plain <img>: product images are admin-supplied URLs (Blob/any host) which next/image would reject */}
+                  <img src={p.image || "/product-png2.png"} alt={p.name} width={180} height={260} className="object-contain drop-shadow-xl max-h-[240px] w-auto" loading="lazy" />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
                   <h3 className="text-xl font-extrabold text-[var(--foreground)]">{p.name}</h3>
@@ -624,8 +629,8 @@ export default function Home() {
                 if (!p) return null;
                 return (
                 <div key={l.id} className="flex gap-4 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF]">
-                  <div className="w-20 h-24 bg-white rounded-xl relative overflow-hidden flex-shrink-0 shadow-sm">
-                    <Image src={p.image || "/product-png2.png"} alt={p.name} fill className="object-contain p-2 drop-shadow-lg" />
+                  <div className="w-20 h-24 bg-white rounded-xl overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center">
+                    <img src={p.image || "/product-png2.png"} alt={p.name} className="object-contain p-2 drop-shadow-lg max-h-full w-auto" />
                   </div>
                   <div className="flex flex-col justify-center flex-1 min-w-0">
                     <h3 className="font-bold text-[#212529] mb-1 truncate">{p.name}</h3>

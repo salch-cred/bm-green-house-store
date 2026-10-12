@@ -73,7 +73,11 @@ export default function ReviewsPage() {
     
     const updated = [review, ...reviews];
     setReviews(updated);
-    localStorage.setItem("bm-store-reviews", JSON.stringify(updated));
+    try {
+      localStorage.setItem("bm-store-reviews", JSON.stringify(updated));
+    } catch {
+      alert("Review saved for this session, but browser storage is full (photo too large?). Try a smaller photo.");
+    }
     
     setNewReview({ rating: 5, text: "", name: "", photoUrl: "" });
     setIsFormOpen(false);
