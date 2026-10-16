@@ -240,3 +240,68 @@ export function cartTotal(cart: CartLine[], products: Product[]): number {
     return s + (p ? p.price * l.qty : 0);
   }, 0);
 }
+
+// ---- shared cloud store (Vercel Blob via /api/store) ----
+// Admin publishes here; every visitor reads it → edits show on ALL devices.
+// Silent no-op when Blob/API is unavailable (local-only demo mode).
+export type SharedData = {
+  config?: StoreConfig;
+  products?: Product[];
+  blogs?: BlogPost[];
+  reviews?: Review[];
+  updatedAt?: string;
+};
+
+export function getAdminKey(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return sessionStorage.getItem("bm-admin-key") || "";
+  } catch {
+    return "";
+  }
+}
+
+export function setAdminKey(k: string) {
+  try {
+    if (k) sessionStorage.setItem("bm-admin-key", k);
+    else sessionStorage.removeItem("bm-admin-key");
+  } catch {}
+}
+
+let pushTimer: ReturnType<typeof setTimeout> | null = null;
+let pending: SharedData | null = null;
+
+export function pushShared(data: SharedData) {
+  if (typeof window === "undefined") return;
+  const key = getAdminKey();
+  if (!key) return; // logged out / different tab → local-only
+  pending = { ...(pending || {}), ...data, updatedAt: new Date().toISOString() };
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(async () => {
+    const body = pending;
+    pending = null;
+    pushTimer = null;
+    if (!body) return;
+    try {
+      await fetch("/api/store", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": getAdminKey(),
+        },
+        body: JSON.stringify(body),
+      });
+    } catch {}
+  }, 800);
+}
+
+export async function fetchShared(): Promise<SharedData | null> {
+  try {
+    const res = await fetch("/api/store", { cache: "no-store" });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return j.shared ? (j.data as SharedData) : null;
+  } catch {
+    return null;
+  }
+}

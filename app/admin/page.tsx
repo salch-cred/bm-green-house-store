@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   defaultConfig, defaultProducts, KEYS, expectedPassword, loadJSON, loadProducts, saveJSON, toCSV, productDiscount, trySave,
+  pushShared, setAdminKey, fetchShared,
   type BlogPost, type Order, type Product, type Review, type StoreConfig,
 } from "../lib/store";
 
@@ -78,7 +79,20 @@ export default function Admin() {
     setReviews(loadJSON<Review[]>(KEYS.reviews, []));
     setOrders(loadJSON<Order[]>(KEYS.orders, []));
     if (localStorage.getItem(KEYS.auth) === "1") setIsAuthenticated(true);
+    // Pick up anything published from another device/browser.
+    fetchShared().then((d) => {
+      if (!d) return;
+      if (d.config) { const c = { ...defaultConfig, ...d.config }; setConfig(c); saveJSON(KEYS.config, c); }
+      if (d.products && d.products.length > 0) { setProducts(d.products); saveJSON(KEYS.products, d.products); }
+      if (d.blogs) { setBlogs(d.blogs); saveJSON(KEYS.blogs, d.blogs); }
+      if (d.reviews) { setReviews(d.reviews); saveJSON(KEYS.reviews, d.reviews); }
+    }).catch(() => {});
   }, []);
+
+  // Publish current slices to the shared cloud store (all visitors see it).
+  const publish = (over: Partial<{ config: StoreConfig; products: Product[]; blogs: BlogPost[]; reviews: Review[] }>) => {
+    pushShared({ config, products, blogs, reviews, ...over });
+  };
 
   const flash = (msg: string) => {
     setSaved(msg);
@@ -95,12 +109,14 @@ export default function Admin() {
 
   const saveStore = () => {
     saveJSON(KEYS.config, config);
-    flash("Storefront saved ✓ visible on homepage");
+    publish({ config });
+    flash("Storefront saved ✓ live on all devices");
   };
   const resetStore = () => {
     if (!confirm("Reset storefront to defaults?")) return;
     setConfig(defaultConfig);
     saveJSON(KEYS.config, defaultConfig);
+    publish({ config: defaultConfig });
     flash("Storefront reset to defaults");
   };
 
@@ -110,6 +126,7 @@ export default function Admin() {
     if (!trySave(KEYS.products, list)) {
       flash("Saved in memory, but browser storage is FULL — use smaller images");
     }
+    publish({ products: list });
   };
 
   const saveProduct = (e: React.FormEvent) => {
@@ -191,6 +208,7 @@ export default function Admin() {
     const c = { ...config, name: next.name, subtitle: next.subtitle, price: next.price, comparePrice: next.comparePrice, stock: next.stock, isLive: config.isLive };
     setConfig(c);
     saveJSON(KEYS.config, c);
+    publish({ config: c, products: products.map((p) => (p.id === featured.id ? next : p)) });
   };
 
   // ---- blogs ----
@@ -223,6 +241,7 @@ export default function Admin() {
       );
       setBlogs(updated);
       saveJSON(KEYS.blogs, updated);
+      publish({ blogs: updated });
       setEditingBlogId(null);
       flash("Blog updated");
     } else {
@@ -237,7 +256,8 @@ export default function Admin() {
       const updated = [post, ...blogs];
       setBlogs(updated);
       saveJSON(KEYS.blogs, updated);
-      flash("Blog published ✓ visible at /blogs");
+      publish({ blogs: updated });
+      flash("Blog published ✓ live on all devices");
     }
     setNewBlog({ mediaType: "none", title: "", content: "", mediaUrl: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -254,6 +274,7 @@ export default function Admin() {
     const updated = blogs.filter((b) => b.id !== id);
     setBlogs(updated);
     saveJSON(KEYS.blogs, updated);
+    publish({ blogs: updated });
   };
 
   const filteredBlogs = useMemo(
@@ -271,6 +292,7 @@ export default function Admin() {
     const updated = reviews.filter((r) => r.id !== id);
     setReviews(updated);
     saveJSON(KEYS.reviews, updated);
+    publish({ reviews: updated });
   };
   const addManualReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,8 +307,9 @@ export default function Admin() {
     const updated = [r, ...reviews];
     setReviews(updated);
     saveJSON(KEYS.reviews, updated);
+    publish({ reviews: updated });
     setManualReview({ name: "", text: "", rating: 5 });
-    flash("Review added ✓ visible at /reviews");
+    flash("Review added ✓ live on all devices");
   };
   const filteredReviews = useMemo(
     () => reviews.filter((r) => (r.name + r.text).toLowerCase().includes(reviewSearch.toLowerCase())),
@@ -388,11 +411,14 @@ export default function Admin() {
     if (passwordInput === expectedPassword()) {
       setIsAuthenticated(true);
       localStorage.setItem(KEYS.auth, "1");
+      setAdminKey(passwordInput); // enables publishing to the shared cloud store
+      setPasswordInput("");
     } else alert("Incorrect password");
   };
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem(KEYS.auth);
+    setAdminKey("");
   };
 
   if (!isAuthenticated) {
@@ -507,7 +533,7 @@ export default function Admin() {
                   <button onClick={() => setTab("orders")} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">View orders ({newOrders} new)</button>
                   <button onClick={exportAll} className="px-5 py-2.5 rounded-xl text-xs font-bold border border-[var(--border)] hover:bg-[var(--surface-hover)]">Backup JSON</button>
                 </div>
-                <p className="text-xs text-[var(--muted)] mt-5 leading-relaxed">Demo persistence: everything is stored in this browser&apos;s localStorage (<code>bm-store-*</code>). For shared multi-device admin, connect Supabase (see Procedure tab).</p>
+                <p className="text-xs text-[var(--muted)] mt-5 leading-relaxed">Every save also publishes to the shared cloud store (<code>/api/store</code> via Vercel Blob), so shoppers on any device see it within seconds. Orders stay on this device only.</p>
               </div>
               <div className={cardCls}>
                 <h3 className="font-extrabold text-lg mb-4">Latest orders</h3>

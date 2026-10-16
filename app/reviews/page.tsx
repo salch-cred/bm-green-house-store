@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Star, Image as ImageIcon, X } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useRef } from "react";
+import { KEYS, fetchShared, loadJSON, saveJSON } from "../lib/store";
 
 type Review = {
   id: string;
@@ -38,12 +39,19 @@ export default function ReviewsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("bm-store-reviews");
+    const saved = loadJSON<Review[] | null>(KEYS.reviews, null);
     if (saved) {
-      setReviews(JSON.parse(saved));
+      setReviews(saved);
     } else {
       setReviews(initialReviews);
     }
+    // Shared cloud store (admin publishes) → same reviews on every device.
+    fetchShared().then((d) => {
+      if (d?.reviews && Array.isArray(d.reviews) && d.reviews.length > 0) {
+        setReviews(d.reviews);
+        saveJSON(KEYS.reviews, d.reviews);
+      }
+    }).catch(() => {});
   }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

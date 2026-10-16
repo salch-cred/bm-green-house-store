@@ -5,13 +5,20 @@ import { ArrowLeft } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { type BlogPost } from "../admin/page";
+import { KEYS, fetchShared, loadJSON, saveJSON } from "../lib/store";
 
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
 
   useEffect(() => {
-    const b = localStorage.getItem("bm-store-blogs");
-    if(b) setBlogs(JSON.parse(b));
+    setBlogs(loadJSON<BlogPost[]>(KEYS.blogs, []));
+    // Shared cloud store (admin publishes) → same posts on every device.
+    fetchShared().then((d) => {
+      if (d?.blogs && Array.isArray(d.blogs)) {
+        setBlogs(d.blogs);
+        saveJSON(KEYS.blogs, d.blogs);
+      }
+    }).catch(() => {});
   }, []);
 
   return (

@@ -16,7 +16,7 @@ const ANIMATION_EASING = [0.32, 0.72, 0, 1] as any;
 
 import { defaultConfig as _defaultConfig, defaultProducts } from "./lib/store";
 import type { StoreConfig, Product, CartLine, Order } from "./lib/store";
-import { KEYS, loadJSON, loadProducts, cartCount, cartTotal, productDiscount } from "./lib/store";
+import { KEYS, loadJSON, loadProducts, cartCount, cartTotal, productDiscount, fetchShared, saveJSON } from "./lib/store";
 
 // Re-exported for backward compat (admin + old imports).
 export type { StoreConfig } from "./lib/store";
@@ -71,10 +71,23 @@ export default function Home() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load admin-saved storefront config + product catalog (admin edits show here).
+  // Load storefront: local cache first (instant), then shared cloud store
+  // (admin publishes) so every visitor sees the latest products/content.
   useEffect(() => {
     setConfig(loadJSON(KEYS.config, _defaultConfig));
     setProducts(loadProducts());
+    fetchShared().then((d) => {
+      if (!d) return;
+      if (d.config) {
+        const c = { ..._defaultConfig, ...d.config };
+        setConfig(c);
+        saveJSON(KEYS.config, c);
+      }
+      if (d.products && Array.isArray(d.products) && d.products.length > 0) {
+        setProducts(d.products);
+        saveJSON(KEYS.products, d.products);
+      }
+    }).catch(() => {});
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEYS.config && e.newValue) {
         try { setConfig({ ..._defaultConfig, ...JSON.parse(e.newValue) }); } catch {}
