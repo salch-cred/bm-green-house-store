@@ -9,7 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   defaultConfig, defaultProducts, KEYS, expectedPassword, loadJSON, loadProducts, saveJSON, toCSV, productDiscount, trySave,
-  pushShared, setAdminKey, fetchShared,
+  pushShared, setAdminKey, fetchShared, getAdminKey, getLastPush,
   type BlogPost, type Order, type Product, type Review, type StoreConfig,
 } from "../lib/store";
 
@@ -71,6 +71,12 @@ export default function Admin() {
   const [newPass, setNewPass] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
 
+  // Cloud publish key lives per-tab. An old saved login has no key, so saves
+  // would stay local-only — surface a reconnect banner instead of failing silently.
+  const [needsReconnect, setNeedsReconnect] = useState(false);
+  const [reconnectPass, setReconnectPass] = useState("");
+  const [lastPush, setLastPush] = useState<ReturnType<typeof getLastPush>>(null);
+
   // ---- load all demo data ----
   useEffect(() => {
     setConfig({ ...defaultConfig, ...loadJSON(KEYS.config, defaultConfig) });
@@ -78,7 +84,15 @@ export default function Admin() {
     setBlogs(loadJSON<BlogPost[]>(KEYS.blogs, []));
     setReviews(loadJSON<Review[]>(KEYS.reviews, []));
     setOrders(loadJSON<Order[]>(KEYS.orders, []));
-    if (localStorage.getItem(KEYS.auth) === "1") setIsAuthenticated(true);
+    if (localStorage.getItem(KEYS.auth) === "1") {
+      setIsAuthenticated(true);
+      // Old session from before cloud publishing → no publish key in this tab.
+      if (!getAdminKey()) setNeedsReconnect(true);
+    }
+    setLastPush(getLastPush());
+    // Publishes are async + debounced (~0.8s); poll so the status pill stays truthful.
+    const t = setInterval(() => setLastPush(getLastPush()), 2000);
+    return () => clearInterval(t);
     // Pick up anything published from another device/browser.
     fetchShared().then((d) => {
       if (!d) return;
@@ -412,7 +426,18 @@ export default function Admin() {
       setIsAuthenticated(true);
       localStorage.setItem(KEYS.auth, "1");
       setAdminKey(passwordInput); // enables publishing to the shared cloud store
+      setNeedsReconnect(false);
       setPasswordInput("");
+    } else alert("Incorrect password");
+  };
+  const reconnect = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reconnectPass === expectedPassword()) {
+      setAdminKey(reconnectPass);
+      setNeedsReconnect(false);
+      setReconnectPass("");
+      publish({});
+      flash("Cloud sync reconnected ✓ next saves go live on all devices");
     } else alert("Incorrect password");
   };
   const logout = () => {
@@ -477,6 +502,16 @@ export default function Admin() {
       </aside>
 
       <section className="flex-1 p-6 md:p-12 overflow-y-auto">
+        {needsReconnect && (
+          <div className="max-w-5xl mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-5 py-4">
+            <b className="block mb-1">Cloud sync not connected in this tab</b>
+            <p className="text-sm mb-3">Your login predates cloud publishing, so saves stay on this device only and shoppers on phones won't see them. Re-enter the admin password once to reconnect.</p>
+            <form onSubmit={reconnect} className="flex flex-wrap gap-2">
+              <input type="password" value={reconnectPass} onChange={(e) => setReconnectPass(e.target.value)} placeholder="Admin password" className="flex-1 min-w-[200px] bg-white border border-amber-300 rounded-xl px-4 py-2.5 text-sm outline-none" />
+              <button type="submit" className="btn-primary px-5 py-2.5 rounded-xl text-sm">Reconnect cloud</button>
+            </form>
+          </div>
+        )}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
             <span className="text-xs font-bold text-[var(--accent)] tracking-widest uppercase mb-2 block">{tab} control</span>
@@ -524,6 +559,19 @@ export default function Admin() {
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className={cardCls}>
+                <h3 className="font-extrabold text-lg mb-4">Cloud sync status</h3>
+                {needsReconnect ? (
+                  <p className="text-sm text-amber-700 font-bold">⚠ Not connected — reconnect above before adding content, or shoppers on other devices won't see it.</p>
+                ) : lastPush === null ? (
+                  <p className="text-sm text-[var(--muted)]">No saves yet. Any save (products, blogs, storefront) publishes to all devices within seconds.</p>
+                ) : lastPush.ok ? (
+                  <p className="text-sm text-green-700 font-bold">● Published to cloud at {lastPush.at} — all devices fetch this.</p>
+                ) : (
+                  <p className="text-sm text-red-600 font-bold">✕ Last publish failed ({lastPush.error}) at {lastPush.at}. Try saving again.</p>
+                )}
+                <p className="text-xs text-[var(--muted)] mt-4 leading-relaxed">Shoppers read from <code>/api/store</code>. Orders stay on this device only.</p>
+              </div>
               <div className={cardCls}>
                 <h3 className="font-extrabold text-lg mb-4">Quick actions</h3>
                 <div className="flex flex-wrap gap-3">

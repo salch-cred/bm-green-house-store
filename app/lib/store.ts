@@ -274,7 +274,12 @@ let pending: SharedData | null = null;
 export function pushShared(data: SharedData) {
   if (typeof window === "undefined") return;
   const key = getAdminKey();
-  if (!key) return; // logged out / different tab → local-only
+  if (!key) {
+    // No publish key in this tab → cloud never gets the update. Recorded so
+    // the admin UI can surface it instead of failing silently.
+    recordPush(false, "not-logged-in-this-tab");
+    return;
+  }
   pending = { ...(pending || {}), ...data, updatedAt: new Date().toISOString() };
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(async () => {
@@ -283,7 +288,7 @@ export function pushShared(data: SharedData) {
     pushTimer = null;
     if (!body) return;
     try {
-      await fetch("/api/store", {
+      const res = await fetch("/api/store", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -291,7 +296,14 @@ export function pushShared(data: SharedData) {
         },
         body: JSON.stringify(body),
       });
-    } catch {}
+      if (res.ok) {
+        recordPush(true);
+      } else {
+        recordPush(false, `HTTP ${res.status}`);
+      }
+    } catch (err) {
+      recordPush(false, err instanceof Error ? err.message : "network error");
+    }
   }, 800);
 }
 
@@ -304,4 +316,24 @@ export async function fetchShared(): Promise<SharedData | null> {
   } catch {
     return null;
   }
+}
+
+// Last cloud-publish result (for the admin status pill). Never throws.
+export function getLastPush(): { ok: boolean; error?: string; at?: string } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("bm-store-last-push");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function recordPush(ok: boolean, error?: string) {
+  try {
+    localStorage.setItem(
+      "bm-store-last-push",
+      JSON.stringify({ ok, error: error || "", at: new Date().toLocaleString() })
+    );
+  } catch {}
 }
