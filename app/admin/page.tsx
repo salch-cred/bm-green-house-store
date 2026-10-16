@@ -188,8 +188,8 @@ export default function Admin() {
       if (!res.ok) throw new Error(blob.error || "upload failed");
       setProductForm((f) => ({ ...f, image: blob.url }));
       flash("Image uploaded");
-    } catch {
-      alert("Upload failed. Check BLOB_READ_WRITE_TOKEN, or paste an image URL.");
+    } catch (err) {
+      alert(`Upload failed (${err instanceof Error ? err.message : "network error"}). You can still paste an image URL manually.`);
     } finally {
       setProductImgUploading(false);
     }
@@ -224,7 +224,7 @@ export default function Admin() {
       setNewBlog((p) => ({ ...p, mediaUrl: blob.url }));
     } catch (err) {
       console.error(err);
-      alert("Upload failed. Set BLOB_READ_WRITE_TOKEN on Vercel, or paste an image URL manually.");
+      alert(`Upload failed (${err instanceof Error ? err.message : "network error"}). You can still paste an image URL manually.`);
     } finally {
       setIsUploading(false);
     }
@@ -355,8 +355,8 @@ export default function Admin() {
       if (!res.ok) throw new Error(blob.error || "upload failed");
       setMediaUrl(blob.url);
       flash("Media uploaded — copy the URL");
-    } catch {
-      alert("Upload failed. Check Vercel Blob token.");
+    } catch (err) {
+      alert(`Upload failed (${err instanceof Error ? err.message : "network error"}).`);
     } finally {
       setMediaUploading(false);
     }

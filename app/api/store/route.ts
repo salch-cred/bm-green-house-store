@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { head, list, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 // Shared cloud store: admin publishes config/products/blogs/reviews here,
@@ -21,7 +21,10 @@ export async function GET(): Promise<NextResponse> {
     const { blobs } = await list({ prefix: PATH });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     if (!hit) return NextResponse.json({ shared: false });
-    const res = await fetch(hit.url, { cache: "no-store" });
+    // Private store: resolve a short-lived download URL server-side, then read it.
+    const meta = await head(hit.pathname);
+    const dl = (meta as { downloadUrl?: string }).downloadUrl || hit.url;
+    const res = await fetch(dl, { cache: "no-store" });
     if (!res.ok) return NextResponse.json({ shared: false });
     const data = await res.json();
     return NextResponse.json({ shared: true, data });
@@ -41,7 +44,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     const body = await req.json();
     await put(PATH, JSON.stringify(body), {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
