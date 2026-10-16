@@ -1,4 +1,4 @@
-import { head, list, put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 // Shared cloud store: admin publishes config/products/blogs/reviews here,
@@ -18,15 +18,13 @@ function serverPassword(): string {
 
 export async function GET(): Promise<NextResponse> {
   try {
-    const { blobs } = await list({ prefix: PATH });
-    const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
-    if (!hit) return NextResponse.json({ shared: false });
-    // Private store: resolve a short-lived download URL server-side, then read it.
-    const meta = await head(hit.pathname);
-    const dl = (meta as { downloadUrl?: string }).downloadUrl || hit.url;
-    const res = await fetch(dl, { cache: "no-store" });
-    if (!res.ok) return NextResponse.json({ shared: false });
-    const data = await res.json();
+    // Private store: stream the JSON straight from Blob (no public URL needed).
+    const result = await get(PATH, { access: "private" });
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return NextResponse.json({ shared: false });
+    }
+    const text = await new Response(result.stream as ReadableStream).text();
+    const data = JSON.parse(text);
     return NextResponse.json({ shared: true, data });
   } catch (error) {
     return NextResponse.json(

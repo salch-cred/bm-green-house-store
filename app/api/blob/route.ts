@@ -1,4 +1,4 @@
-import { head } from '@vercel/blob';
+import { get } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
 // Serves files from the private Blob store to the public site.
@@ -16,19 +16,14 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const meta = await head(path);
-    const dl = (meta as { downloadUrl?: string }).downloadUrl || meta.url;
-    const upstream = await fetch(dl, { cache: 'no-store' });
-    if (!upstream.ok || !upstream.body) {
+    const result = await get(path, { access: 'private' });
+    if (!result || result.statusCode !== 200 || !result.stream) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     const headers = new Headers();
-    const ct = upstream.headers.get('content-type') || meta.contentType;
-    if (ct) headers.set('content-type', ct);
-    const len = upstream.headers.get('content-length');
-    if (len) headers.set('content-length', len);
+    if (result.blob.contentType) headers.set('content-type', result.blob.contentType);
     headers.set('cache-control', 'public, max-age=31536000, immutable');
-    return new NextResponse(upstream.body, { headers });
+    return new NextResponse(result.stream as ReadableStream, { headers });
   } catch {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
