@@ -122,9 +122,10 @@ export default function Admin() {
   };
 
   const saveStore = () => {
+    if (!config.isLive && !confirm("Store is currently OFFLINE — the Buy button will be disabled for every visitor. Save anyway?")) return;
     saveJSON(KEYS.config, config);
     publish({ config });
-    flash("Storefront saved ✓ live on all devices");
+    flash(config.isLive ? "Storefront saved ✓ live on all devices" : "Saved — but store is OFFLINE! Enable 'Store is live' to sell.");
   };
   const resetStore = () => {
     if (!confirm("Reset storefront to defaults?")) return;
@@ -502,6 +503,16 @@ export default function Admin() {
       </aside>
 
       <section className="flex-1 p-6 md:p-12 overflow-y-auto">
+        {!config.isLive && (
+          <div className="max-w-5xl mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex-1">
+              <b className="block">Store is OFFLINE — visitors see “Currently Offline” and cannot buy.</b>
+              <span className="text-sm">Go to Storefront tab and tick “Store is live”, then Save storefront.</span>
+            </div>
+            <button onClick={() => { const c = { ...config, isLive: true }; setConfig(c); saveJSON(KEYS.config, c); publish({ config: c }); flash("Store is LIVE ✓ all devices"); }}
+              className="btn-primary px-6 py-3 rounded-xl text-sm shrink-0">Turn store live now</button>
+          </div>
+        )}
         {needsReconnect && (
           <div className="max-w-5xl mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-5 py-4">
             <b className="block mb-1">Cloud sync not connected in this tab</b>
@@ -728,7 +739,8 @@ export default function Admin() {
                     </div>
                     <label className="flex items-center gap-3 bg-[var(--surface-hover)] border border-[var(--border)] rounded-xl px-4 py-3 cursor-pointer">
                       <input type="checkbox" checked={config.isLive} onChange={(e) => field("isLive", e.target.checked)} className="w-5 h-5 accent-[#3E5A3B]" />
-                      <span className="font-bold text-sm">Store is live (enables Buy Now + checkout)</span>
+                      <span className="font-bold text-sm flex-1">Store is live (enables Buy Now + checkout)</span>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${config.isLive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{config.isLive ? "LIVE" : "OFFLINE"}</span>
                     </label>
                     <label className="block"><span className={labelCls}>Delivery note (shown at checkout)</span><input value={config.deliveryNote} onChange={(e) => field("deliveryNote", e.target.value)} className={inputCls} /></label>
                   </div>
