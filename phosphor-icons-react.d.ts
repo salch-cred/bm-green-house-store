@@ -59,4 +59,10 @@ declare module "@phosphor-icons/react" {
   export const BookOpen: Icon;
   export const UploadSimple: Icon;
   export const DownloadSimple: Icon;
+  export const WhatsappLogo: Icon;
+  export const XLogo: Icon;
+  export const LinkIcon: Icon;
+  export const ShareNetwork: Icon;
+  export const CalendarBlank: Icon;
+  export const Clock: Icon;
 }
