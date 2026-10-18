@@ -65,7 +65,7 @@ declare module "@phosphor-icons/react" {
   export const ShareNetwork: Icon;
   export const CalendarBlank: Icon;
   export const Clock: Icon;
-  export const Quote: Icon;
+  export const Quotes: Icon;
   export const CaretUp: Icon;
   export const EnvelopeSimple: Icon;
   export const MapPin: Icon;

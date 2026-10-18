@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Star, Image as ImageIcon, X, Leaf, Quote, SealCheck, Sparkle, CheckCircle } from "@phosphor-icons/react";
+import { ArrowLeft, Star, Image as ImageIcon, X, Leaf, Quotes, SealCheck, Sparkle, CheckCircle } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { KEYS, fetchShared, loadJSON, saveJSON } from "../lib/store";
@@ -126,7 +126,7 @@ export default function ReviewsPage() {
       <header className="relative overflow-hidden bg-gradient-to-br from-[var(--accent)] via-[#3a5238] to-[#2D422B] text-white pt-20 pb-28 px-6">
         <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 70%, white 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
         <motion.div animate={{ y: [0, -16, 0], rotate: [0, 10, 0] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }} className="absolute top-20 right-[10%] opacity-25"><Leaf size={80} weight="duotone" /></motion.div>
-        <motion.div animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-12 left-[7%] opacity-20"><Quote size={72} weight="fill" /></motion.div>
+        <motion.div animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-12 left-[7%] opacity-20"><Quotes size={72} weight="fill" /></motion.div>
         <motion.div animate={{ y: [0, -11, 0] }} transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }} className="absolute top-28 left-[22%] opacity-20"><Sparkle size={46} weight="duotone" /></motion.div>
 
         <div className="max-w-[860px] mx-auto relative z-10">
@@ -283,7 +283,7 @@ export default function ReviewsPage() {
               transition={{ ...fadeUp.transition, delay: Math.min(i * 0.06, 0.3) }}
               className="bg-[var(--surface)] border border-[var(--border)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all p-7 rounded-[26px] relative flex flex-col"
             >
-              <Quote size={38} weight="fill" className="absolute top-5 right-6 text-[var(--accent)] opacity-10" />
+              <Quotes size={38} weight="fill" className="absolute top-5 right-6 text-[var(--accent)] opacity-10" />
               <div className="flex text-[#F5A623] mb-4 gap-0.5">
                 {[...Array(5)].map((_, j) => <Star key={j} weight={j < review.rating ? "fill" : "regular"} size={16} />)}
               </div>
