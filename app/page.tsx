@@ -413,87 +413,120 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-24 px-6 relative z-10 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, var(--accent) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-        <motion.div animate={{ y: [0, -14, 0], rotate: [0, 10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-16 right-[4%] text-[var(--accent)] opacity-[0.07] pointer-events-none hidden lg:block"><Leaf size={110} weight="duotone" /></motion.div>
-        <motion.div animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-16 left-[3%] text-[var(--accent)] opacity-[0.06] pointer-events-none hidden lg:block"><Leaf size={80} weight="duotone" /></motion.div>
+      {/* Benefits Section — dark feature panel */}
+      <section className="py-6 px-3 md:px-6 relative z-10">
+        <div className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[var(--accent)] via-[#3a5238] to-[#24361f] text-white shadow-xl">
+          {/* decor */}
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 70%, white 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#E4B363] opacity-[0.09] blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-32 -left-24 w-96 h-96 bg-[#9BC99B] opacity-[0.08] blur-[120px] rounded-full pointer-events-none" />
+          <motion.div animate={{ y: [0, -16, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-20 right-[8%] opacity-[0.12] pointer-events-none hidden lg:block"><Leaf size={110} weight="duotone" /></motion.div>
+          <motion.div animate={{ y: [0, 14, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-32 left-[5%] opacity-[0.10] pointer-events-none hidden lg:block"><Leaf size={80} weight="duotone" /></motion.div>
+          <motion.div animate={{ y: [0, -11, 0] }} transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }} className="absolute top-40 left-[30%] opacity-[0.10] pointer-events-none hidden lg:block"><Sparkle size={44} weight="duotone" /></motion.div>
 
-        <div className="container mx-auto max-w-[1200px] relative">
-          <FadeUp className="text-center mb-14">
-            <span className="inline-flex items-center gap-2 bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--accent)] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-5">
-              <Sparkle size={13} weight="fill" /> The case for date seeds
-            </span>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-4">
-              Why switch to <span className="italic font-serif">date seeds?</span>
-            </h2>
-            <p className="text-lg text-[var(--muted)]">The perfect healthy alternative to your daily brew.</p>
-          </FadeUp>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* 01 — Energy: hero card with animated curve */}
-            <FadeUp delay={0.05} className="lg:col-span-3 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 md:p-10 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-              <div className="absolute -top-12 -right-12 w-44 h-44 bg-[var(--accent)] opacity-[0.05] blur-3xl rounded-full" />
-              <div className="flex items-start justify-between mb-5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[#5a7a4a] text-white flex items-center justify-center shadow-md">
-                  <Lightning size={26} weight="duotone" />
-                </div>
-                <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">01</span>
-              </div>
-              <h3 className="text-2xl font-extrabold text-[var(--foreground)] mb-2">Sustained energy</h3>
-              <p className="text-[var(--muted)] leading-relaxed mb-6">A steady boost that carries you through the day — no jittery spikes, no afternoon crash. That's the date-seed difference.</p>
-              <div className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-2xl p-4 pt-5">
-                <svg viewBox="0 0 320 132" className="w-full h-auto" role="img" aria-label="Energy curve: coffee spikes and crashes, date seeds stay steady">
-                  <line x1="0" y1="116" x2="320" y2="116" stroke="#E9ECEF" strokeWidth="1" />
-                  <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38 L 320 116 L 0 116 Z" fill="#3E5A3B" initial={{ opacity: 0 }} whileInView={{ opacity: 0.07 }} viewport={{ once: true }} transition={{ duration: 1.4, delay: 0.9 }} />
-                  <motion.path d="M0 102 C 30 96, 36 28, 56 22 C 72 17, 80 56, 98 76 C 116 94, 128 102, 148 108 C 188 118, 230 120, 320 121" fill="none" stroke="#ADB5BD" strokeWidth="2.5" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.6, ease: "easeInOut" }} />
-                  <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38" fill="none" stroke="#3E5A3B" strokeWidth="3" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.8, ease: "easeInOut", delay: 0.2 }} />
-                  <motion.circle cx="320" cy="38" r="4.5" fill="#3E5A3B" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1.9, duration: 0.3 }} />
-                  <text x="44" y="12" fontSize="10" fontWeight="700" fill="#ADB5BD">Coffee</text>
-                  <text x="150" y="99" fontSize="9" fontWeight="600" fill="#ADB5BD" opacity="0.8">crash</text>
-                  <text x="240" y="28" fontSize="10" fontWeight="700" fill="#3E5A3B">Date seeds</text>
-                </svg>
-              </div>
+          <div className="relative px-6 md:px-14 pt-16 md:pt-20 pb-12">
+            <FadeUp className="text-center max-w-2xl mx-auto mb-12">
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/15 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-5">
+                <Sparkle size={13} weight="fill" /> The case for date seeds
+              </span>
+              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+                Why switch to <span className="italic font-serif text-[#E4B363]">date seeds?</span>
+              </h2>
+              <p className="text-white/70 text-lg font-medium">The perfect healthy alternative to your daily brew — steady, calm, and genuinely good for you.</p>
             </FadeUp>
 
-            {/* 02 + 03 stacked */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              <FadeUp delay={0.15} className="flex-1 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3E5A3B] to-[#2D422B] text-white flex items-center justify-center shadow-md">
-                    <Moon size={24} weight="duotone" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1100px] mx-auto">
+              {/* 01 — energy curve */}
+              <FadeUp delay={0.05} className="bg-white/5 border border-white/10 rounded-[26px] p-6 md:p-8 backdrop-blur-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#E4B363]">
+                    <Lightning size={24} weight="duotone" />
                   </div>
-                  <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">02</span>
+                  <span className="font-serif italic text-5xl font-bold text-white opacity-10 select-none leading-none">01</span>
                 </div>
-                <div className="flex items-baseline gap-3 mb-1">
-                  <span className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">0 mg</span>
-                  <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">caffeine</span>
+                <h3 className="text-xl md:text-2xl font-extrabold mb-2">Sustained energy</h3>
+                <p className="text-sm text-white/70 leading-relaxed mb-6">A steady, calm lift that carries your whole day — no jittery spike, no 4&nbsp;pm crash.</p>
+                <div className="bg-black/20 border border-white/10 rounded-2xl p-4 pt-5">
+                  <svg viewBox="0 0 320 132" className="w-full h-auto" role="img" aria-label="Energy curve: coffee spikes then crashes, date seeds stay steady">
+                    <line x1="0" y1="116" x2="320" y2="116" stroke="white" strokeOpacity="0.12" strokeWidth="1" />
+                    <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38 L 320 116 L 0 116 Z" fill="#9BC99B" initial={{ opacity: 0 }} whileInView={{ opacity: 0.1 }} viewport={{ once: true }} transition={{ duration: 1.4, delay: 0.9 }} />
+                    <motion.path d="M0 102 C 30 96, 36 28, 56 22 C 72 17, 80 56, 98 76 C 116 94, 128 102, 148 108 C 188 118, 230 120, 320 121" fill="none" stroke="#E4B363" strokeWidth="7" strokeLinecap="round" opacity="0.12" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.6, ease: "easeInOut" }} />
+                    <motion.path d="M0 102 C 30 96, 36 28, 56 22 C 72 17, 80 56, 98 76 C 116 94, 128 102, 148 108 C 188 118, 230 120, 320 121" fill="none" stroke="#E4B363" strokeWidth="2.5" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.6, ease: "easeInOut" }} />
+                    <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38" fill="none" stroke="#9BC99B" strokeWidth="8" strokeLinecap="round" opacity="0.12" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.8, ease: "easeInOut", delay: 0.2 }} />
+                    <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38" fill="none" stroke="#9BC99B" strokeWidth="3" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.8, ease: "easeInOut", delay: 0.2 }} />
+                    <motion.circle cx="320" cy="38" r="4.5" fill="#9BC99B" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1.9, duration: 0.3 }} />
+                    <text x="44" y="12" fontSize="10" fontWeight="700" fill="#E4B363">Coffee</text>
+                    <text x="150" y="99" fontSize="9" fontWeight="600" fill="white" fillOpacity="0.5">crash</text>
+                    <text x="236" y="28" fontSize="10" fontWeight="700" fill="#9BC99B">Date seeds</text>
+                  </svg>
                 </div>
-                <h3 className="text-lg font-extrabold text-[var(--foreground)] mb-2">Zero caffeine</h3>
-                <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">Naturally caffeine-free — a warm, comforting cup any time of day, even right before bed.</p>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5 text-[var(--foreground)]">
-                  <CheckCircle size={13} weight="fill" className="text-[var(--accent)]" /> Bedtime friendly
-                </span>
               </FadeUp>
 
-              <FadeUp delay={0.25} className="flex-1 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#5a7a4a] text-white flex items-center justify-center shadow-md">
-                    <ShieldCheck size={24} weight="duotone" />
+              {/* 02 — scorecard */}
+              <FadeUp delay={0.15} className="bg-white/5 border border-white/10 rounded-[26px] p-6 md:p-8 backdrop-blur-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#9BC99B]">
+                    <Coffee size={24} weight="duotone" />
                   </div>
-                  <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">03</span>
+                  <span className="font-serif italic text-5xl font-bold text-white opacity-10 select-none leading-none">02</span>
                 </div>
-                <h3 className="text-lg font-extrabold text-[var(--foreground)] mb-2">Rich in antioxidants</h3>
-                <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">Supports digestion and boosts your immune system natively — minerals your body actually uses.</p>
-                <div className="flex flex-wrap gap-2">
-                  {["Magnesium", "Calcium", "Iron"].map((m) => (
-                    <span key={m} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5 text-[var(--foreground)]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" /> {m}
-                    </span>
+                <h3 className="text-xl md:text-2xl font-extrabold mb-5">Date seeds <span className="font-serif italic text-white/40">vs</span> your regular brew</h3>
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-[1.1fr_1fr_1fr] gap-2 text-[10px] font-extrabold uppercase tracking-widest text-white/40 px-1 pb-1">
+                    <span></span>
+                    <span className="flex items-center gap-1.5 text-[#E4B363]"><Coffee size={12} weight="fill" /> Coffee</span>
+                    <span className="flex items-center gap-1.5 text-[#9BC99B]"><Leaf size={12} weight="fill" /> Seeds</span>
+                  </div>
+                  {[
+                    { label: "Energy", coffee: "Spike, then crash", seeds: "Smooth all day" },
+                    { label: "Sleep", coffee: "Keeps you up", seeds: "Bedtime safe" },
+                    { label: "Focus", coffee: "The 3 pm shakes", seeds: "Calm & clear" },
+                    { label: "Minerals", coffee: "None to speak of", seeds: "Mg · Ca · Fe" },
+                  ].map((r) => (
+                    <div key={r.label} className="grid grid-cols-[1.1fr_1fr_1fr] gap-2 items-center bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
+                      <span className="text-xs font-bold text-white/85">{r.label}</span>
+                      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/55"><X size={13} weight="bold" className="text-[#E4B363] shrink-0" /> {r.coffee}</span>
+                      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#cfe3cf]"><Check size={13} weight="bold" className="text-[#9BC99B] shrink-0" /> {r.seeds}</span>
+                    </div>
                   ))}
                 </div>
               </FadeUp>
             </div>
+
+            {/* stat tiles */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-[1100px] mx-auto mt-6">
+              {[
+                { icon: Moon, value: "0 mg", label: "caffeine per cup", color: "#E4B363" },
+                { icon: ShieldCheck, value: "3", label: "key minerals — Mg · Ca · Fe", color: "#9BC99B" },
+                { icon: Package, value: "50+", label: "cups from one 100g pack", color: "#E4B363" },
+              ].map((s, i) => (
+                <FadeUp key={s.value} delay={0.2 + i * 0.08} className="bg-white/5 border border-white/10 rounded-[26px] p-6 flex items-center gap-4 backdrop-blur-sm">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0" style={{ color: s.color }}>
+                    <s.icon size={22} weight="duotone" />
+                  </div>
+                  <div>
+                    <div className="text-2xl md:text-3xl font-extrabold tracking-tight">{s.value}</div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-white/55">{s.label}</div>
+                  </div>
+                </FadeUp>
+              ))}
+            </div>
+          </div>
+
+          {/* marquee */}
+          <div className="relative border-t border-white/10 overflow-hidden py-4">
+            <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 24, repeat: Infinity, ease: "linear" }} className="flex w-max">
+              {[0, 1].map((half) => (
+                <div key={half} className="flex items-center shrink-0">
+                  {["Caffeine-free", "Zero added sugar", "Rich in minerals", "Small-batch roasted", "Steady energy", "Bedtime safe"].map((t) => (
+                    <span key={t} className="flex items-center">
+                      <span className="text-xs md:text-sm font-extrabold uppercase tracking-[0.25em] text-white/35 px-6">{t}</span>
+                      <Sparkle size={12} weight="fill" className="text-[#E4B363] opacity-60" />
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
