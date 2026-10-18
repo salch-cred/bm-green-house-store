@@ -72,4 +72,5 @@ declare module "@phosphor-icons/react" {
   export const PaperPlaneTilt: Icon;
   export const Phone: Icon;
   export const SealCheck: Icon;
+  export const Moon: Icon;
 }

@@ -11,7 +11,7 @@ import {
   Truck,
   Star, Article, Info, Sparkle, X, User,
   FacebookLogo, TwitterLogo, YoutubeLogo, InstagramLogo, LinkedinLogo,
-  WhatsappLogo, EnvelopeSimple, MapPin, PaperPlaneTilt, CaretUp, SealCheck
+  WhatsappLogo, EnvelopeSimple, MapPin, PaperPlaneTilt, CaretUp, SealCheck, Moon
 } from "@phosphor-icons/react";
 
 const ANIMATION_EASING = [0.32, 0.72, 0, 1] as any;
@@ -414,34 +414,86 @@ export default function Home() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-24 px-6 relative z-10">
-        <div className="container mx-auto max-w-[1200px]">
-          <FadeUp className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-4">Why switch to Date Seeds?</h2>
+      <section className="py-24 px-6 relative z-10 overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, var(--accent) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+        <motion.div animate={{ y: [0, -14, 0], rotate: [0, 10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-16 right-[4%] text-[var(--accent)] opacity-[0.07] pointer-events-none hidden lg:block"><Leaf size={110} weight="duotone" /></motion.div>
+        <motion.div animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-16 left-[3%] text-[var(--accent)] opacity-[0.06] pointer-events-none hidden lg:block"><Leaf size={80} weight="duotone" /></motion.div>
+
+        <div className="container mx-auto max-w-[1200px] relative">
+          <FadeUp className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--accent)] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-5">
+              <Sparkle size={13} weight="fill" /> The case for date seeds
+            </span>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-4">
+              Why switch to <span className="italic font-serif">date seeds?</span>
+            </h2>
             <p className="text-lg text-[var(--muted)]">The perfect healthy alternative to your daily brew.</p>
           </FadeUp>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <FadeUp delay={0.1} className="bg-[var(--surface)] p-8 rounded-3xl shadow-sm border border-[var(--border)] hover:-translate-y-2 transition-transform duration-500">
-              <div className="w-14 h-14 bg-[var(--surface-hover)] rounded-2xl flex items-center justify-center text-[var(--accent)] mb-6">
-                <Lightning size={32} weight="duotone" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* 01 — Energy: hero card with animated curve */}
+            <FadeUp delay={0.05} className="lg:col-span-3 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 md:p-10 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+              <div className="absolute -top-12 -right-12 w-44 h-44 bg-[var(--accent)] opacity-[0.05] blur-3xl rounded-full" />
+              <div className="flex items-start justify-between mb-5">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[#5a7a4a] text-white flex items-center justify-center shadow-md">
+                  <Lightning size={26} weight="duotone" />
+                </div>
+                <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">01</span>
               </div>
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Sustained Energy</h3>
-              <p className="text-[var(--muted)] leading-relaxed">Get a steady energy boost throughout the day without the jittery spikes and crashes associated with normal coffee.</p>
-            </FadeUp>
-            <FadeUp delay={0.2} className="bg-[var(--surface)] p-8 rounded-3xl shadow-sm border border-[var(--border)] hover:-translate-y-2 transition-transform duration-500">
-              <div className="w-14 h-14 bg-[var(--surface-hover)] rounded-2xl flex items-center justify-center text-[var(--accent)] mb-6">
-                <Coffee size={32} weight="duotone" />
+              <h3 className="text-2xl font-extrabold text-[var(--foreground)] mb-2">Sustained energy</h3>
+              <p className="text-[var(--muted)] leading-relaxed mb-6">A steady boost that carries you through the day — no jittery spikes, no afternoon crash. That's the date-seed difference.</p>
+              <div className="bg-[var(--surface-hover)] border border-[var(--border)] rounded-2xl p-4 pt-5">
+                <svg viewBox="0 0 320 132" className="w-full h-auto" role="img" aria-label="Energy curve: coffee spikes and crashes, date seeds stay steady">
+                  <line x1="0" y1="116" x2="320" y2="116" stroke="#E9ECEF" strokeWidth="1" />
+                  <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38 L 320 116 L 0 116 Z" fill="#3E5A3B" initial={{ opacity: 0 }} whileInView={{ opacity: 0.07 }} viewport={{ once: true }} transition={{ duration: 1.4, delay: 0.9 }} />
+                  <motion.path d="M0 102 C 30 96, 36 28, 56 22 C 72 17, 80 56, 98 76 C 116 94, 128 102, 148 108 C 188 118, 230 120, 320 121" fill="none" stroke="#ADB5BD" strokeWidth="2.5" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.6, ease: "easeInOut" }} />
+                  <motion.path d="M0 104 C 60 92, 110 72, 160 60 C 210 48, 270 42, 320 38" fill="none" stroke="#3E5A3B" strokeWidth="3" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.8, ease: "easeInOut", delay: 0.2 }} />
+                  <motion.circle cx="320" cy="38" r="4.5" fill="#3E5A3B" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1.9, duration: 0.3 }} />
+                  <text x="44" y="12" fontSize="10" fontWeight="700" fill="#ADB5BD">Coffee</text>
+                  <text x="150" y="99" fontSize="9" fontWeight="600" fill="#ADB5BD" opacity="0.8">crash</text>
+                  <text x="240" y="28" fontSize="10" fontWeight="700" fill="#3E5A3B">Date seeds</text>
+                </svg>
               </div>
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Zero Caffeine</h3>
-              <p className="text-[var(--muted)] leading-relaxed">Naturally caffeine-free, making it the perfect warm beverage for any time of the day, even right before bed.</p>
             </FadeUp>
-            <FadeUp delay={0.3} className="bg-[var(--surface)] p-8 rounded-3xl shadow-sm border border-[var(--border)] hover:-translate-y-2 transition-transform duration-500">
-              <div className="w-14 h-14 bg-[var(--surface-hover)] rounded-2xl flex items-center justify-center text-[var(--accent)] mb-6">
-                <ShieldCheck size={32} weight="duotone" />
-              </div>
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Rich in Antioxidants</h3>
-              <p className="text-[var(--muted)] leading-relaxed">Packed with minerals like magnesium, calcium, and iron. It supports digestion and boosts your immune system natively.</p>
-            </FadeUp>
+
+            {/* 02 + 03 stacked */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <FadeUp delay={0.15} className="flex-1 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3E5A3B] to-[#2D422B] text-white flex items-center justify-center shadow-md">
+                    <Moon size={24} weight="duotone" />
+                  </div>
+                  <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">02</span>
+                </div>
+                <div className="flex items-baseline gap-3 mb-1">
+                  <span className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">0 mg</span>
+                  <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">caffeine</span>
+                </div>
+                <h3 className="text-lg font-extrabold text-[var(--foreground)] mb-2">Zero caffeine</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">Naturally caffeine-free — a warm, comforting cup any time of day, even right before bed.</p>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5 text-[var(--foreground)]">
+                  <CheckCircle size={13} weight="fill" className="text-[var(--accent)]" /> Bedtime friendly
+                </span>
+              </FadeUp>
+
+              <FadeUp delay={0.25} className="flex-1 relative bg-[var(--surface)] border border-[var(--border)] rounded-[28px] p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#5a7a4a] text-white flex items-center justify-center shadow-md">
+                    <ShieldCheck size={24} weight="duotone" />
+                  </div>
+                  <span className="font-serif italic text-5xl font-bold text-[var(--accent)] opacity-10 select-none leading-none">03</span>
+                </div>
+                <h3 className="text-lg font-extrabold text-[var(--foreground)] mb-2">Rich in antioxidants</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">Supports digestion and boosts your immune system natively — minerals your body actually uses.</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Magnesium", "Calcium", "Iron"].map((m) => (
+                    <span key={m} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5 text-[var(--foreground)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" /> {m}
+                    </span>
+                  ))}
+                </div>
+              </FadeUp>
+            </div>
           </div>
         </div>
       </section>
