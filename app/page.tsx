@@ -161,6 +161,15 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const navHoverRef = useRef(false);
+
+  // Dynamic Island: auto open/close on a 7-second cycle (pause while hovering).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!navHoverRef.current) setIsNavExpanded((v) => !v);
+    }, 7000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,8 +256,8 @@ export default function Home() {
       >
         <div 
           className="bg-[var(--surface)] border border-[var(--border)] rounded-full p-2 flex items-center pointer-events-auto shadow-md transition-all duration-500 hover:shadow-lg cursor-pointer overflow-hidden"
-          onMouseEnter={() => setIsNavExpanded(true)}
-          onMouseLeave={() => setIsNavExpanded(false)}
+          onMouseEnter={() => { navHoverRef.current = true; setIsNavExpanded(true); }}
+          onMouseLeave={() => { navHoverRef.current = false; setIsNavExpanded(false); }}
           onClick={() => setIsNavExpanded(!isNavExpanded)}
         >
           <Link href="/" className="flex items-center px-2 shrink-0">
