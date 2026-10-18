@@ -8,8 +8,10 @@ import {
   ShoppingCart, ArrowRight, CaretDown, Check,
   Leaf, ShieldCheck, Lightning, Fire,
   Coffee, Drop, CheckCircle, Package,
+  Truck,
   Star, Article, Info, Sparkle, X, User,
-  FacebookLogo, TwitterLogo, YoutubeLogo, InstagramLogo, LinkedinLogo
+  FacebookLogo, TwitterLogo, YoutubeLogo, InstagramLogo, LinkedinLogo,
+  WhatsappLogo, EnvelopeSimple, MapPin, PaperPlaneTilt, CaretUp, SealCheck
 } from "@phosphor-icons/react";
 
 const ANIMATION_EASING = [0.32, 0.72, 0, 1] as any;
@@ -64,6 +66,8 @@ const LazyVideo = ({ src, className }: { src: string, className?: string }) => {
 };
 
 export default function Home() {
+  const [year, setYear] = useState(2026);
+  useEffect(() => setYear(new Date().getFullYear()), []);
   const [config, setConfig] = useState(_defaultConfig);
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [cartOpen, setCartOpen] = useState(false);
@@ -569,22 +573,94 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-[var(--border)] text-center md:text-left bg-[var(--surface)] relative z-10">
-        <div className="container mx-auto max-w-[1200px] flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <Image src="/bm-logo.png" alt="BM Logo" width={32} height={32} className="rounded-lg" />
-            <span className="flex items-center gap-1 font-extrabold text-lg tracking-tight whitespace-nowrap">
-              <span className="bg-gradient-to-r from-[var(--accent)] to-[#839b5c] bg-clip-text text-transparent">BM GREEN</span>
-              <Leaf size={16} weight="fill" className="text-[var(--accent)] animate-pulse" />
-            </span>
+      <footer className="relative overflow-hidden bg-gradient-to-b from-[var(--surface)] to-[var(--surface-hover)] border-t border-[var(--border)] z-10">
+        {/* Animated top accent */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--accent)] via-[#E4B363] to-[var(--accent)] overflow-hidden">
+          <motion.div animate={{ x: ["-100%", "150%"] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-1/3 h-full bg-white/40 blur-sm" />
+        </div>
+        {/* Decorative dots + leaves */}
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, var(--accent) 1px, transparent 1px)", backgroundSize: "26px 26px" }} />
+        <motion.div animate={{ y: [0, -14, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-16 right-[6%] text-[var(--accent)] opacity-[0.07] pointer-events-none hidden md:block"><Leaf size={120} weight="duotone" /></motion.div>
+        <motion.div animate={{ y: [0, 12, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-10 left-[4%] text-[var(--accent)] opacity-[0.06] pointer-events-none hidden md:block"><Leaf size={90} weight="duotone" /></motion.div>
+
+        <div className="container mx-auto max-w-[1200px] px-6 pt-16 pb-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr_1.4fr] gap-10 md:gap-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <Image src="/bm-logo.png" alt="BM Logo" width={40} height={40} className="rounded-xl shadow-sm" />
+                <span className="flex items-center gap-1 font-extrabold text-xl tracking-tight whitespace-nowrap">
+                  <span className="bg-gradient-to-r from-[var(--accent)] to-[#839b5c] bg-clip-text text-transparent">BM GREEN</span>
+                  <Leaf size={18} weight="fill" className="text-[var(--accent)]" />
+                </span>
+              </div>
+              <p className="text-sm text-[var(--muted)] font-medium leading-relaxed mb-6 max-w-[280px]">
+                Traditional recipes, modern purity. Bringing families together over healthy, caffeine-free cups.
+              </p>
+              <div className="flex items-center gap-2.5">
+                <Link href={`https://wa.me/${config.whatsapp}`} target="_blank" className="w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:bg-[#128C4B] hover:text-white hover:-translate-y-0.5 transition-all shadow-sm" aria-label="WhatsApp"><WhatsappLogo size={19} weight="fill" /></Link>
+                <Link href={config.instagram || "https://instagram.com/bmgreenhouse"} target="_blank" className="w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:bg-[#C1355E] hover:text-white hover:-translate-y-0.5 transition-all shadow-sm" aria-label="Instagram"><InstagramLogo size={19} weight="fill" /></Link>
+                <Link href="#" className="w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:bg-[#1877F2] hover:text-white hover:-translate-y-0.5 transition-all shadow-sm" aria-label="Facebook"><FacebookLogo size={19} weight="fill" /></Link>
+                <Link href="#" className="w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:bg-[#FF0000] hover:text-white hover:-translate-y-0.5 transition-all shadow-sm" aria-label="YouTube"><YoutubeLogo size={19} weight="fill" /></Link>
+                <Link href="#" className="w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:bg-black hover:text-white hover:-translate-y-0.5 transition-all shadow-sm" aria-label="X"><TwitterLogo size={19} weight="fill" /></Link>
+              </div>
+            </div>
+
+            {/* Explore */}
+            <div>
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <Sparkle size={13} weight="fill" className="text-[var(--accent)]" /> Explore
+              </h4>
+              <ul className="flex flex-col gap-3 text-sm font-medium text-[var(--muted)]">
+                <li><Link href="/#products" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Shop all</Link></li>
+                <li><Link href="/reviews" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Customer reviews</Link></li>
+                <li><Link href="/blogs" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">The Journal</Link></li>
+                <li><Link href="/#about" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Our story</Link></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[var(--foreground)] mb-4 flex items-center gap-2">
+                <SealCheck size={13} weight="fill" className="text-[var(--accent)]" /> Support
+              </h4>
+              <ul className="flex flex-col gap-3 text-sm font-medium text-[var(--muted)]">
+                <li><Link href="/shipping" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Shipping info</Link></li>
+                <li><Link href="/privacy" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Privacy policy</Link></li>
+                <li><Link href="/terms" className="hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all">Terms of service</Link></li>
+              </ul>
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-2 mt-5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[var(--surface)] border border-[var(--border)] rounded-full px-2.5 py-1 text-[var(--muted)]"><CheckCircle size={11} weight="fill" className="text-[var(--accent)]" /> 100% natural</span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[var(--surface)] border border-[var(--border)] rounded-full px-2.5 py-1 text-[var(--muted)]"><Truck size={11} weight="fill" className="text-[var(--accent)]" /> Fast shipping</span>
+              </div>
+            </div>
+
+            {/* Contact card */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[var(--accent)] to-[#2D422B] text-white rounded-3xl p-6 shadow-lg">
+              <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute -top-4 -right-4 opacity-15"><Leaf size={80} weight="duotone" /></motion.div>
+              <div className="relative z-10">
+                <h4 className="font-extrabold text-base mb-1.5">Need help choosing?</h4>
+                <p className="text-white/75 text-xs font-medium mb-5 leading-relaxed">Chat with us on WhatsApp — we reply fast with order &amp; bulk pricing.</p>
+                <Link href={`https://wa.me/${config.whatsapp}`} target="_blank" className="flex items-center justify-center gap-2 bg-white text-[var(--accent)] font-bold px-5 py-3 rounded-full text-sm hover:bg-white/90 transition-colors shadow-md mb-2.5">
+                  <WhatsappLogo size={17} weight="fill" /> Message us
+                </Link>
+                <div className="flex flex-col gap-1.5 text-[11px] text-white/70 font-medium">
+                  <span className="flex items-center gap-2"><EnvelopeSimple size={13} /> Orders via WhatsApp &amp; Instagram</span>
+                  <span className="flex items-center gap-2"><MapPin size={13} /> Made fresh in small batches</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-sm font-medium text-[var(--muted)]">
-            <Link href={config.instagram || "https://instagram.com/bmgreenhouse"} target="_blank" className="flex items-center gap-2 hover:text-[var(--accent)] transition-colors">
-              <InstagramLogo size={20} /> @bmgreenhouse
-            </Link>
-            <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors hidden md:block">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[var(--accent)] transition-colors hidden md:block">Terms of Service</Link>
-            <Link href="/shipping" className="hover:text-[var(--accent)] transition-colors hidden md:block">Shipping</Link>
+
+          {/* Bottom bar */}
+          <div className="mt-14 pt-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-[var(--muted)] font-medium text-center md:text-left">
+              © {year} BM Green House. All rights reserved. Crafted with <Leaf size={12} weight="fill" className="inline text-[var(--accent)] -mt-0.5" /> for healthier mornings.
+            </p>
+            <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="inline-flex items-center gap-2 text-xs font-bold text-[var(--muted)] hover:text-[var(--accent)] transition-colors group">
+              Back to top <span className="w-7 h-7 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center group-hover:-translate-y-0.5 group-hover:bg-[var(--accent)] group-hover:text-white transition-all"><CaretUp size={14} weight="bold" /></span>
+            </button>
           </div>
         </div>
       </footer>
